@@ -8,7 +8,7 @@
  */
 
 import { App } from "obsidian";
-import { BaseTask } from "src/types/base-task";
+import { BaseTask, TaskDateUpdate } from "src/types/base-task";
 import { TaskStatus } from "src/types/task";
 import { TaskDateProperty } from "./task-dates";
 import { TaskProgress } from "./task-progress";
@@ -72,13 +72,46 @@ export function datesFromDraft(
 }
 
 /**
+ * The dates a write has to lay down, given what the draft changed.
+ *
+ * The dialog shows the dates, so the dialog decides them: whatever its two
+ * fields hold when it is saved is what the task ends up with, and an empty
+ * field means no date. Nothing else in the write may add one.
+ *
+ * That rule is here because `updateStatus` stamps dates of its own — moving an
+ * inline task to in progress sets its start to today. A stamp is right for the
+ * quick toggles, where the status is all the user touched and nothing on
+ * screen says otherwise. It is wrong here, because typing a percentage moves
+ * the status by itself: a task due next month, with progress typed against it,
+ * would come back scheduled to start this morning. So whenever the status
+ * moved, both dates are written afterwards exactly as the dialog had them, and
+ * the stamp is undone.
+ *
+ * The completion date `updateStatus` writes is untouched by this — it records
+ * what happened rather than proposing a plan, and it is not a field the dialog
+ * offers.
+ */
+export function datesForEdit(
+  draft: TaskEditFields,
+  previous: TaskEditFields
+): TaskDateUpdate | null {
+  const datesChanged =
+    draft.start !== previous.start || draft.due !== previous.due;
+  const statusChanged = draft.status !== previous.status;
+
+  if (!datesChanged && !statusChanged) return null;
+
+  return { start: draft.start, due: draft.due };
+}
+
+/**
  * Writes one task edit: the words, the state, the two dates and the progress,
  * in that order and only where something actually changed.
  *
  * The order matters. Setting a task in progress stamps a start date and
  * finishing one stamps a completion date, so the status goes first and the
- * dates the user typed are written over the top — otherwise a status change
- * would quietly overrule the date beside it in the same dialog.
+ * dates go over the top — otherwise a status change would quietly overrule the
+ * date beside it in the same dialog. `datesForEdit` decides which those are.
  *
  * Returns the task as the vault now has it, so the caller can show what the
  * file says rather than what the dialog hoped. A write that fails throws, and
@@ -97,11 +130,9 @@ export async function applyTaskEdit(
     current = withTaskChanges(current, { status: draft.status });
   }
 
-  if (draft.start !== previous.start || draft.due !== previous.due) {
-    const dated = await current.setDates(
-      { start: draft.start, due: draft.due },
-      app
-    );
+  const dates = datesForEdit(draft, previous);
+  if (dates) {
+    const dated = await current.setDates(dates, app);
     if (!dated) throw new Error("dates could not be written");
     current = dated;
   }

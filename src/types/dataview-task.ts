@@ -2,6 +2,7 @@ import { App, Vault } from "obsidian";
 import { BaseTask } from "./base-task";
 import { TaskStatus } from "./task";
 import { TaskInsertPosition, TaskDateUpdate } from "./base-task";
+import { findTaskDate, getTaskDateProperties } from "../lib/task-dates";
 import {
   findTaskLineByIdOrText,
   statusSymbols,
@@ -56,14 +57,24 @@ export class DataviewTask extends BaseTask {
           getTodayDate()
         );
       }
-      // Delete done timestamp and add start timestamp
+      // Delete done timestamp, and record when work began — but only for a
+      // task that has not already been given a start date. A task planned to
+      // start next month has been answered that question already, and the
+      // answer is the plan; overwriting it with today would quietly pull the
+      // task forward on every chart that draws it.
       else if (newStatus === "in_progress") {
         lines[taskLineIdx] = removeDateFromTask(lines[taskLineIdx], "done");
-        lines[taskLineIdx] = addDateToTask(
-          lines[taskLineIdx],
-          "start",
-          getTodayDate()
+        const planned = findTaskDate(
+          getTaskDateProperties(lines[taskLineIdx]),
+          "start"
         );
+        if (!planned) {
+          lines[taskLineIdx] = addDateToTask(
+            lines[taskLineIdx],
+            "start",
+            getTodayDate()
+          );
+        }
       }
       // Delete canceled and done timestamp
       else if (newStatus === "todo") {

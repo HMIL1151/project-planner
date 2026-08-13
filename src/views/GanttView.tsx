@@ -21,8 +21,14 @@ import {
   getTasksApi,
   parseTaskLine,
   resolveDefaultTaskFile,
-  setTaskTextInVault,
 } from "src/lib/utils";
+import {
+  TaskEditFields,
+  applyTaskEdit,
+  datesFromDraft,
+  taskEditChanged,
+  withTaskChanges,
+} from "src/lib/task-write";
 import { promptForTaskLine } from "src/components/task-line-modal";
 import { promptForTaskFinance } from "src/components/task-finance-modal";
 import {
@@ -109,9 +115,8 @@ import { promptForMilestone } from "src/components/gantt-milestone-modal";
 import { ProjectPlannerSettings } from "src/types/settings";
 import { GanttLegend } from "src/components/gantt-legend";
 import { useUndoHistory } from "src/hooks/use-undo-history";
-import { TaskDateProperty, findTaskDate } from "src/lib/task-dates";
-import { TaskProgress, effectiveTaskStatus } from "src/lib/task-progress";
-import { TaskStatus } from "src/types/task";
+import { findTaskDate } from "src/lib/task-dates";
+import { effectiveTaskStatus } from "src/lib/task-progress";
 import ProjectPlannerPlugin from "../main";
 import {
   FOCUS_TASK_EVENT,
@@ -127,44 +132,6 @@ interface GanttViewProps {
 
 /** Stable empty map, so switching the warnings off is not a new prop. */
 const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
-
-/** Fields a view can swap on a task without re-reading it from the vault. */
-interface TaskFieldChanges {
-  summary?: string;
-  status?: TaskStatus;
-  tags?: string[];
-  dates?: TaskDateProperty[];
-  progress?: TaskProgress;
-  incomingLinks?: string[];
-}
-
-/**
- * A copy of a task with a few fields swapped.
- *
- * An optimistic redraw needs a new object — React compares by identity — that
- * is still a real `DataviewTask` or `NoteTask` with all its methods, so the
- * prototype is carried over rather than spread away.
- */
-function withTaskChanges(task: BaseTask, changes: TaskFieldChanges): BaseTask {
-  return Object.assign(
-    Object.create(Object.getPrototypeOf(task)),
-    task,
-    changes
-  ) as BaseTask;
-}
-
-/** The dates a task carries, with start and due replaced by a draft's. */
-function datesFromDraft(
-  dates: TaskDateProperty[],
-  draft: TaskEditDraft
-): TaskDateProperty[] {
-  const next = dates.filter(
-    (entry) => entry.type !== "start" && entry.type !== "due"
-  );
-  if (draft.start) next.push({ type: "start", date: draft.start });
-  if (draft.due) next.push({ type: "due", date: draft.due });
-  return next;
-}
 
 export default function GanttView({ settings, plugin }: GanttViewProps) {
   const app = useApp();
@@ -1010,13 +977,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   /**
-   * Writes one task edit: the words, the state, the two dates and the
-   * progress, in that order and only where something actually changed.
-   *
-   * The order matters. Setting a task in progress stamps a start date and
-   * finishing one stamps a completion date, so the status goes first and the
-   * dates the user typed are written over the top — otherwise a status change
-   * would quietly overrule the date beside it in the same dialog.
+   * Writes one task edit, through the same sequence the board uses.
    *
    * The redraw is optimistic and the vault write is what can fail; a failure
    * puts the task the view was showing back and says so. Everything the edit
@@ -1030,20 +991,15 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
       );
       if (!task) return false;
 
-      const canEditText = task.type === "dataview";
-      const previousText = taskTextDescription(task.text);
-      const previousStart = findTaskDate(task.dates, "start");
-      const previousDue = findTaskDate(task.dates, "due");
+      const previous: TaskEditFields = {
+        text: taskTextDescription(task.text),
+        status: task.status,
+        start: findTaskDate(task.dates, "start"),
+        due: findTaskDate(task.dates, "due"),
+        progress: task.progress.percent,
+      };
 
-      const textChanged = canEditText && draft.text !== previousText;
-      const statusChanged = draft.status !== task.status;
-      const datesChanged =
-        draft.start !== previousStart || draft.due !== previousDue;
-      const progressChanged = draft.progress !== task.progress.percent;
-
-      if (!textChanged && !statusChanged && !datesChanged && !progressChanged) {
-        return true;
-      }
+      if (!taskEditChanged(draft, previous)) return true;
 
       // Optimistic: the vault write is slower than the eye
       applyTaskUpdate(
@@ -1052,7 +1008,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           status: draft.status,
           progress: { percent: draft.progress },
           dates: datesFromDraft(task.dates, draft),
-          ...(textChanged ? { summary: draft.text } : {}),
+          ...(task.type === "dataview" && draft.text !== previous.text
+            ? { summary: draft.text }
+            : {}),
         })
       );
 
@@ -1060,36 +1018,10 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
         // An inline task with no ID in its line is found by its text, which is
         // ambiguous when two tasks read the same — and about to change
         await stampTaskId(task);
-
-        let current: BaseTask = task;
-
-        if (statusChanged) {
-          await current.updateStatus(draft.status, app);
-          current = withTaskChanges(current, { status: draft.status });
-        }
-
-        if (datesChanged) {
-          const dated = await current.setDates(
-            { start: draft.start, due: draft.due },
-            app
-          );
-          if (!dated) throw new Error("dates could not be written");
-          current = dated;
-        }
-
-        if (textChanged) {
-          const renamed = await setTaskTextInVault(current, draft.text, app);
-          if (!renamed) throw new Error("task text could not be written");
-          current = renamed;
-        }
-
-        if (progressChanged) {
-          const progressed = await current.setProgress(draft.progress, app);
-          if (!progressed) throw new Error("progress could not be written");
-          current = progressed;
-        }
-
-        applyTaskUpdate(taskId, current);
+        applyTaskUpdate(
+          taskId,
+          await applyTaskEdit(app, task, draft, previous)
+        );
         return true;
       } catch (error) {
         console.error("Could not save the task edit", error);
