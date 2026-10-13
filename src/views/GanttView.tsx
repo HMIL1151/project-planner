@@ -1,6 +1,7 @@
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -26,8 +27,13 @@ import { withTaskChanges } from "src/lib/task-write";
 import { openTaskEditor } from "src/lib/open-task-editor";
 import { promptForTaskLine } from "src/components/task-line-modal";
 import { withCompanionNote } from "src/lib/companion-note";
-import { diffDays, todayIso } from "src/lib/date-utils";
-import { getTimelineRange, resizeBar, shiftBar } from "src/lib/gantt-schedule";
+import { diffDays, inclusiveDayCount, todayIso } from "src/lib/date-utils";
+import {
+  fillTimeline,
+  getTimelineRange,
+  resizeBar,
+  shiftBar,
+} from "src/lib/gantt-schedule";
 import { planCascade } from "src/lib/gantt-cascade";
 import {
   GanttRow,
@@ -53,16 +59,13 @@ import {
   parentTaskIds,
   resolveParentIds,
   toggleCollapsed,
+  toggleBranchCollapsed,
+  collapsedIdsForLevel,
+  hierarchyDepth,
 } from "src/lib/task-hierarchy";
 import { promptForParent } from "src/components/gantt-parent-modal";
 import { plainTaskText } from "src/lib/task-text";
-import {
-  GANTT_SCALES,
-  GanttChart,
-  GanttScale,
-  ROW_HEIGHT,
-  RowReorder,
-} from "src/components/gantt-chart";
+import { GanttChart, ROW_HEIGHT, RowReorder } from "src/components/gantt-chart";
 import {
   GanttMilestone,
   addMilestone,
@@ -106,21 +109,45 @@ import {
   GANTT_VIEW_TYPE,
   focusTargetFor,
 } from "src/lib/view-focus";
+import { combineSources } from "src/lib/task-source";
+import {
+  DEFAULT_GANTT_SCALE,
+  GanttScaleId,
+  isGanttScaleId,
+  resolveDayWidth,
+} from "src/lib/gantt-scale";
 import { t } from "../i18n";
 
 interface GanttViewProps {
   settings: ProjectPlannerSettings;
   plugin: ProjectPlannerPlugin;
+  /** Dataview source for this chart's project, narrowing the vault-wide one */
+  source?: string;
+  /**
+   * The scale a note's block asks for. A chart given one keeps its scale to
+   * itself; without one it opens at, and remembers, the Gantt tab's scale.
+   */
+  initialScale?: GanttScaleId;
 }
 
 /** Stable empty map, so switching the warnings off is not a new prop. */
 const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
 
-export default function GanttView({ settings, plugin }: GanttViewProps) {
+export default function GanttView({
+  settings,
+  plugin,
+  source = "",
+  initialScale,
+}: GanttViewProps) {
   const app = useApp();
   const [tasks, setTasks] = useState<BaseTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [scale, setScale] = useState<GanttScale>(GANTT_SCALES[0]);
+  const [scale, setScale] = useState<GanttScaleId>(() => {
+    if (initialScale) return initialScale;
+    return isGanttScaleId(settings.ganttScale)
+      ? settings.ganttScale
+      : DEFAULT_GANTT_SCALE;
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [hideCompleted, setHideCompleted] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -144,6 +171,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   });
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  // Width the chart has to fill; the timeline runs on until it does
+  const [containerWidth, setContainerWidth] = useState(0);
   // Undo runs long after its action, so it reads tasks through a ref
   const tasksRef = useRef<BaseTask[]>([]);
   const hasCenteredRef = useRef(false);
@@ -155,12 +185,12 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     (options: { notify?: boolean } = {}) => {
       setIsLoading(true);
       window.setTimeout(() => {
-        setTasks(getAllTasks(app));
+        setTasks(getAllTasks(app, combineSources(settings.taskSource, source)));
         setIsLoading(false);
         if (options.notify) new Notice(t("gantt.reloaded"));
       }, 0);
     },
-    [app]
+    [app, settings.taskSource, source]
   );
 
   useEffect(() => {
@@ -418,7 +448,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   // chart all read from this one place, so they go quiet together.
   const visibleRisks = settings.ganttShowWarnings ? risksByTaskId : NO_RISKS;
 
-  const timeline = useMemo(
+  const planRange = useMemo(
     () =>
       getTimelineRange(
         rows.map((row) => row.bar),
@@ -427,12 +457,49 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     [milestones, rows, today]
   );
 
+  // Room beside the label column; the timeline is drawn into it
+  const timelineWidth = Math.max(0, containerWidth - settings.ganttLabelWidth);
+  const dayWidth = resolveDayWidth(scale, {
+    availablePx: timelineWidth,
+    totalDays: inclusiveDayCount(planRange.start, planRange.end),
+  });
+
+  // Days that fit beside the label column, so the grid reaches the right edge
+  const minTimelineDays = Math.ceil(timelineWidth / dayWidth);
+
+  const timeline = useMemo(
+    () => fillTimeline(planRange, minTimelineDays),
+    [minTimelineDays, planRange]
+  );
+
+  const handleScaleChange = useCallback(
+    (next: GanttScaleId) => {
+      setScale(next);
+      if (!initialScale) void plugin.setGanttScale(next);
+    },
+    [initialScale, plugin]
+  );
+
+  // Rescaling keeps the day in the middle of the view where it was, rather
+  // than leaving the scroll offset to land somewhere unrelated
+  const lastDayWidthRef = useRef(dayWidth);
+  useLayoutEffect(() => {
+    const previous = lastDayWidthRef.current;
+    lastDayWidthRef.current = dayWidth;
+    const el = scrollRef.current;
+    if (!el || previous === dayWidth) return;
+
+    const half = Math.max(0, el.clientWidth - settings.ganttLabelWidth) / 2;
+    const centreDay = (el.scrollLeft + half) / previous;
+    el.scrollLeft = Math.max(0, centreDay * dayWidth - half);
+  }, [dayWidth, settings.ganttLabelWidth]);
+
   const scrollToToday = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
-    const offset = diffDays(timeline.start, today) * scale.dayWidth;
+    const offset = diffDays(timeline.start, today) * dayWidth;
     el.scrollTo({ left: Math.max(0, offset - el.clientWidth / 3) });
-  }, [scale.dayWidth, timeline.start, today]);
+  }, [dayWidth, timeline.start, today]);
 
   // Centre on today the first time rows arrive, not on every reload
   useEffect(() => {
@@ -466,9 +533,9 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     const el = scrollRef.current;
     if (!el) return;
 
-    const offset = diffDays(timeline.start, row.bar.start) * scale.dayWidth;
+    const offset = diffDays(timeline.start, row.bar.start) * dayWidth;
     el.scrollTo({ left: Math.max(0, offset - el.clientWidth / 3) });
-  }, [pendingScrollId, rows, scale.dayWidth, timeline.start]);
+  }, [dayWidth, pendingScrollId, rows, timeline.start]);
 
   useEffect(() => {
     if (!linkingFromId) return;
@@ -478,6 +545,18 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [linkingFromId]);
+
+  // The container only exists once tasks have loaded, so it is watched from then
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setContainerWidth(el.clientWidth);
+    const observer = new ResizeObserver(() =>
+      setContainerWidth(el.clientWidth)
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isLoading]);
 
   useEffect(() => {
     tasksRef.current = tasks;
@@ -716,12 +795,38 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   );
 
   const handleToggleCollapse = useCallback(
-    (taskId: string) => {
+    (taskId: string, branch: boolean) => {
       void plugin.setGanttCollapsedTaskIds(
-        toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
+        branch
+          ? toggleBranchCollapsed(
+              settings.ganttCollapsedTaskIds,
+              visibleParentById,
+              taskId
+            )
+          : toggleCollapsed(settings.ganttCollapsedTaskIds, taskId)
       );
     },
-    [plugin, settings.ganttCollapsedTaskIds]
+    [plugin, settings.ganttCollapsedTaskIds, visibleParentById]
+  );
+
+  // How many levels the outline buttons offer; a flat plan offers none
+  const outlineDepth = useMemo(
+    () => hierarchyDepth(visibleParentById),
+    [visibleParentById]
+  );
+
+  // A one-off fold, not a mode: rows opened by hand afterwards stay open
+  const handleShowLevel = useCallback(
+    (level: number) => {
+      void plugin.setGanttCollapsedTaskIds(
+        collapsedIdsForLevel(
+          settings.ganttCollapsedTaskIds,
+          visibleParentById,
+          level
+        )
+      );
+    },
+    [plugin, settings.ganttCollapsedTaskIds, visibleParentById]
   );
 
   /**
@@ -1515,10 +1620,12 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
   }
 
   return (
-    <div className="project-planner-gantt-container">
+    <div className="project-planner-gantt-container" ref={containerRef}>
       <GanttToolbar
         scale={scale}
-        onScaleChange={setScale}
+        onScaleChange={handleScaleChange}
+        outlineDepth={outlineDepth}
+        onShowLevel={handleShowLevel}
         onScrollToToday={scrollToToday}
         onReload={() => loadTasks({ notify: true })}
         onApplyInferred={() => void handleApplyInferred()}
@@ -1580,7 +1687,7 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
           timelineStart={timeline.start}
           timelineEnd={timeline.end}
           today={today}
-          scale={scale}
+          dayWidth={dayWidth}
           app={app}
           palette={settings.tagColorPalette}
           colorOverrides={settings.tagColorOverrides}

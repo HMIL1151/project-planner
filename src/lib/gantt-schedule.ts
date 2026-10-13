@@ -2,6 +2,7 @@ import {
   addDays,
   addWorkingDays,
   diffDays,
+  inclusiveDayCount,
   isWeekend,
   nextWorkingDay,
   toEpochDay,
@@ -260,6 +261,22 @@ export function getTimelineRange(
   if (diffDays(max, today) > 0) max = today;
 
   return { start: addDays(min, -pad), end: addDays(max, pad) };
+}
+
+/**
+ * Stretches a timeline to at least `minDays`, adding the days at the end.
+ *
+ * A plan that spans a few weeks draws only a few weeks of grid, which on a
+ * wide window leaves the right-hand side bare — rows striped all the way
+ * across, months and ticks stopping short. Running the days on to the edge
+ * fills it with dates the bars can be dragged onto.
+ */
+export function fillTimeline(
+  range: { start: string; end: string },
+  minDays: number
+): { start: string; end: string } {
+  if (inclusiveDayCount(range.start, range.end) >= minDays) return range;
+  return { start: range.start, end: addDays(range.start, minDays - 1) };
 }
 
 /**

@@ -29,6 +29,9 @@ import GraphEmbedView, {
   EmbedError,
   filterStateFromSource,
 } from "./views/GraphEmbedView";
+import GanttEmbedView from "./views/GanttEmbedView";
+import { GANTT_EMBED_CODE_BLOCK, parseGanttEmbed } from "./lib/gantt-embed";
+import { buildDataviewSource } from "./lib/task-source";
 import {
   ProjectPlannerSettings,
   DEFAULT_SETTINGS,
@@ -59,6 +62,7 @@ import { UndoHistory } from "./lib/undo-history";
 import { ensureRateNote } from "./lib/rate-book-note";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 import { GanttMilestone } from "./lib/gantt-milestones";
+import { GanttScaleId } from "./lib/gantt-scale";
 import { KanbanGroupBy } from "./lib/kanban-buckets";
 
 const EMBED_CODE_BLOCK = "project-planner";
@@ -259,6 +263,49 @@ export default class ProjectPlannerPlugin extends Plugin {
         this.renderEmbed(source, el, ctx);
       });
     }
+
+    this.registerMarkdownCodeBlockProcessor(
+      GANTT_EMBED_CODE_BLOCK,
+      (source, el, ctx) => {
+        this.renderGanttEmbed(source, el, ctx);
+      }
+    );
+  }
+
+  /** Renders one `project-planner-gantt` block into `el`. */
+  private renderGanttEmbed(
+    body: string,
+    el: HTMLElement,
+    ctx: MarkdownPostProcessorContext
+  ): void {
+    const root = createRoot(el);
+    const child = new MarkdownRenderChild(el);
+    child.onunload = () => root.unmount();
+    ctx.addChild(child);
+
+    if (!checkDataviewPlugin(this.app).isReady) {
+      root.render(<EmbedError message={t("embed.dataview_required")} />);
+      return;
+    }
+
+    const parsed = parseGanttEmbed(body);
+    if (parsed.kind === "invalid") {
+      root.render(<EmbedError message={t("embed.invalid_json")} />);
+      return;
+    }
+
+    // The note holding the block names the project in a tab opened from it
+    const noteName =
+      ctx.sourcePath.split("/").pop()?.replace(/\.md$/, "") ?? "";
+
+    root.render(
+      <GanttEmbedView
+        plugin={this}
+        source={buildDataviewSource(parsed.source)}
+        config={parsed.config}
+        title={noteName}
+      />
+    );
   }
 
   /** Renders one fenced embed block into `el`. */
@@ -299,6 +346,7 @@ export default class ProjectPlannerPlugin extends Plugin {
         plugin={this}
         initialFilter={parsed.filter}
         embedConfig={parsed.config}
+        source={buildDataviewSource(parsed.source)}
       />
     );
   }
@@ -412,6 +460,12 @@ export default class ProjectPlannerPlugin extends Plugin {
   /** Persists the Gantt task-column width after a resize drag. */
   async setGanttLabelWidth(width: number): Promise<void> {
     this.settings.ganttLabelWidth = width;
+    await this.saveSettings();
+  }
+
+  /** Persists the Gantt tab's timeline scale. */
+  async setGanttScale(scale: GanttScaleId): Promise<void> {
+    this.settings.ganttScale = scale;
     await this.saveSettings();
   }
 
@@ -608,6 +662,17 @@ export default class ProjectPlannerPlugin extends Plugin {
   async activateGanttViewInMainArea() {
     const leaf = this.app.workspace.getLeaf(true); // true = main area
     await leaf.setViewState({ type: GANTT_VIEW_TYPE, active: true });
+    void this.app.workspace.revealLeaf(leaf);
+  }
+
+  /** Opens a Gantt tab charting only the tasks a Dataview source names. */
+  async openGanttForSource(source: string, title: string) {
+    const leaf = this.app.workspace.getLeaf(true); // true = main area
+    await leaf.setViewState({
+      type: GANTT_VIEW_TYPE,
+      active: true,
+      state: { source, title },
+    });
     void this.app.workspace.revealLeaf(leaf);
   }
 

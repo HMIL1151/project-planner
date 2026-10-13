@@ -286,8 +286,11 @@ Dragging snaps to whole days and a bar can never be shorter than one day.
   untouched when you turn it off.
 - **Group by** — tag, status, note or project.
 - **Collapse** — fold a parent's children away; parents roll their children's
-  span up into one bar.
-- **Zoom** — days, weeks or months, with a **Today** button.
+  span up into one bar, and a collapsed row still shows the tasks inside it as
+  faint strips and one-day gates as diamonds. **Alt-click** folds a whole
+  branch; **Levels 1 2 3 … All** fold the chart to a depth.
+- **Zoom** — days, weeks or months; a **period** of 2–18 months fitted to the
+  width; or **Fit** for the whole plan. With a **Today** button.
 
 ### Milestones
 
@@ -546,7 +549,7 @@ finance views.
 | **Layout** | Direction (horizontal/vertical), edge style (Bezier/Straight/SmoothStep), SmoothStep corner radius |
 | **Tag appearance** | Palette (Rainbow, Ocean, Forest, Sunset, Mono) plus per-tag colour pinning, with **Reset all** |
 | **Task relations** | How dependencies are written: CSV, individual, or Dataview |
-| **Gantt** | Working days, critical path, schedule warnings, row order and collapsed rows |
+| **Gantt** | Working days, critical path, schedule warnings, scale, row order and collapsed rows |
 | **Board** | Group-by, card order, collapsed columns |
 | **Finance** | Enable, rates note path, default hours per day, currency, include suggested dates |
 | **Companion notes** | Enable, and the folder to write them to |
