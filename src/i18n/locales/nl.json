@@ -67,6 +67,13 @@
     "scale_days": "Dagen",
     "scale_weeks": "Weken",
     "scale_months": "Maanden",
+    "scale_window": "Periode",
+    "scale_window_desc": "Toon zoveel maanden over de breedte van de grafiek",
+    "scale_window_months": "{{count}} mnd",
+    "scale_fit": "Passend",
+    "scale_fit_desc": "Pas het hele plan in de breedte van de grafiek",
+    "quarter_band": "K{{quarter}} {{year}}",
+    "quarter_tick": "K{{quarter}}",
     "search_placeholder": "Taken zoeken",
     "hide_completed": "Voltooide verbergen",
     "task_count": "{{n}} taken",
@@ -113,6 +120,11 @@
     "link_failed": "Kon die taken niet koppelen",
     "linking_hint": "Koppelen vanaf \"{{task}}\" — klik de taak die geblokkeerd wordt.",
     "linking_cancel": "Annuleren",
+    "compact_rows": "Compact",
+    "compact_rows_desc": "Teken rijen smaller, zodat meer van een lang plan op het scherm past",
+    "focus_branch": "Toon alleen deze tak",
+    "focus_hint": "Alleen \"{{task}}\", de taken erbinnen en de taken erboven worden getoond.",
+    "focus_clear": "Alles tonen",
     "skip_weekends": "Werkdagen",
     "skip_weekends_desc": "Meet duur in werkdagen en houd balken van het weekend af: een taak die vrijdag begint en 4 dagen duurt, eindigt de woensdag erna",
     "moved_together": "{{n}} taken verplaatst",
@@ -186,7 +198,16 @@
     "parent_failed": "Kon niet wijzigen in welke taak deze zit",
     "undo_set_parent": "gewijzigd waarin \"{{task}}\" zit",
     "bar_summary_tooltip": "{{start}} tot {{end}} — de looptijd van de taken hierbinnen",
-    "legend_summary": "Samenvatting van onderliggende taken"
+    "legend_summary": "Samenvatting van onderliggende taken",
+    "collapse_hint": "Klap de taken hierbinnen in (Alt-klik: de hele tak)",
+    "expand_hint": "Toon de taken hierbinnen (Alt-klik: de hele tak)",
+    "outline": "Niveaus",
+    "outline_desc": "Klap de grafiek in tot een diepte. Rijen kunnen daarna nog één voor één worden geopend",
+    "outline_level_desc": "Toon {{level}} niveau(s) van taken",
+    "outline_all": "Alles",
+    "outline_all_desc": "Open elke rij",
+    "legend_rollup": "Binnen een ingeklapte rij",
+    "view_title_project": "Gantt: {{project}}"
   },
   "kanban": {
     "view_title": "Takenbord",
@@ -450,7 +471,10 @@
     "finance_currency": "Valuta",
     "finance_currency_desc": "Valuta waarin kosten worden getoond; tarieven in de notitie zijn kale getallen",
     "finance_include_inferred": "Voorgestelde datums meetellen",
-    "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd"
+    "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd",
+    "task_source": "Taakbron",
+    "task_source_desc": "Uit welk deel van de kluis elke weergave taken leest, geschreven als Dataview FROM-bron. Leeg laten voor de hele kluis.",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "Status",
@@ -574,7 +598,8 @@
     "pick_note_placeholder": "Kies een notitie...",
     "dataview_required": "Project Planner vereist de Dataview-plugin.",
     "invalid_json": "Dit Project Planner-blok bevat ongeldige JSON. Voeg het opnieuw in via het opdrachtenpalet om het te herstellen.",
-    "legacy_format": "Dit Project Planner-blok gebruikt een verouderd formaat. Voeg het opnieuw in via het opdrachtenpalet om het te migreren."
+    "legacy_format": "Dit Project Planner-blok gebruikt een verouderd formaat. Voeg het opnieuw in via het opdrachtenpalet om het te migreren.",
+    "open_in_tab": "Openen in een tabblad"
   },
   "finance": {
     "menu_item": "Financiën…",
@@ -780,5 +805,8 @@
     "issue_allocations_off": "de verdeling op deze taak telt op tot {{total}}%, niet 100%",
     "issue_no_allocations": "er zijn uren vastgelegd maar niemand toegewezen",
     "issue_inferred_schedule": "de kosten berusten op geschatte datums"
+  },
+  "task_source": {
+    "invalid": "Project Planner: Dataview kon de taakbron {{source}} niet lezen. Controleer de syntaxis."
   }
 }

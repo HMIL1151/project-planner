@@ -285,6 +285,21 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
+      .setName(t("settings.task_source"))
+      .setDesc(t("settings.task_source_desc"))
+      .addText((text) => {
+        text
+          .setPlaceholder(t("settings.task_source_placeholder"))
+          .setValue(this.plugin.settings.taskSource);
+        // Saved on blur or Enter, not per keystroke: every save reloads the
+        // views, and a half-typed source is one Dataview cannot read
+        text.inputEl.addEventListener("change", () => {
+          this.plugin.settings.taskSource = text.getValue().trim();
+          void this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
       .setHeading()
       .setName(t("settings.display_options"));
 

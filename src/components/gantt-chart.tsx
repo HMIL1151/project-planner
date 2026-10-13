@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronRight,
   Coins,
+  Focus,
   GripVertical,
   IndentIncrease,
   Link2,
@@ -22,11 +23,16 @@ import {
   addDays,
   diffDays,
   inclusiveDayCount,
-  isFirstOfMonth,
   isWeekend,
-  dayOfWeek,
 } from "src/lib/date-utils";
 import { GanttDependency, GanttRow } from "src/lib/gantt-rows";
+import {
+  HeaderLayout,
+  buildHeaderTicks,
+  buildSpans,
+  headerLayout,
+  quarterOf,
+} from "src/lib/gantt-scale";
 import { planCascade } from "src/lib/gantt-cascade";
 import { useSummaryRenderer } from "src/hooks/use-summary-renderer";
 import { HierarchyGroup } from "src/lib/task-hierarchy";
@@ -46,6 +52,7 @@ import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
 import { effectiveTaskStatus } from "src/lib/task-progress";
 import { GanttBar, BarDragResult } from "./gantt-bar";
+import { GanttRollup } from "./gantt-rollup";
 import {
   GanttMilestoneMarker,
   GanttMilestoneRow,
@@ -58,6 +65,8 @@ import { TagColorOverrides, TagColorPalette } from "src/lib/tag-color-manager";
 import { t } from "../i18n";
 
 export const ROW_HEIGHT = 34;
+/** Rows in compact density: room for the name, a slimmer bar and no more */
+export const COMPACT_ROW_HEIGHT = 22;
 
 /** Stable empty set, so switching the critical path off is not a new prop. */
 const EMPTY_KEYS: Set<string> = new Set();
@@ -67,17 +76,6 @@ const BASE_HEADER_ROWS = 2;
 
 export const MIN_LABEL_WIDTH = 140;
 export const MAX_LABEL_WIDTH = 720;
-
-export interface GanttScale {
-  id: "days" | "weeks" | "months";
-  dayWidth: number;
-}
-
-export const GANTT_SCALES: GanttScale[] = [
-  { id: "days", dayWidth: 32 },
-  { id: "weeks", dayWidth: 12 },
-  { id: "months", dayWidth: 5 },
-];
 
 export type RowPlacement = "before" | "after" | "inside";
 
@@ -103,7 +101,10 @@ interface GanttChartProps {
   timelineStart: string;
   timelineEnd: string;
   today: string;
-  scale: GanttScale;
+  /** Pixels per day, from the toolbar's scale */
+  dayWidth: number;
+  /** Slimmer rows, so more of a long plan fits on screen */
+  compact: boolean;
   app: App;
   palette: TagColorPalette;
   colorOverrides: TagColorOverrides;
@@ -142,9 +143,12 @@ interface GanttChartProps {
   onStartLink: (_taskId: string) => void;
   onShowInMap: (_taskId: string) => void;
   /** Folds a parent's subtree away, or opens it again. */
-  onToggleCollapse: (_taskId: string) => void;
+  /** `branch` folds or opens everything beneath the task along with it */
+  onToggleCollapse: (_taskId: string, _branch: boolean) => void;
   /** Opens the picker for which task this one should sit inside. */
   onSetParent: (_taskId: string) => void;
+  /** Narrows the chart to this task's branch */
+  onFocusBranch: (_taskId: string) => void;
   /** Absent when finance is switched off, which hides the button. */
   onEditFinance?: (_taskId: string) => void;
   onAddTag: (_taskId: string, _tag: string) => void;
@@ -261,78 +265,42 @@ function RowLabel({
   );
 }
 
-interface TickMark {
-  iso: string;
-  offset: number;
-  label: string;
-  major: boolean;
-}
-
 const MONTH_LABEL_OPTIONS: Intl.DateTimeFormatOptions = {
   month: "short",
   year: "numeric",
 };
 
-function formatMonth(iso: string): string {
+const MONTH_TICK_OPTIONS: Intl.DateTimeFormatOptions = { month: "short" };
+
+function formatMonth(
+  iso: string,
+  options: Intl.DateTimeFormatOptions = MONTH_LABEL_OPTIONS
+): string {
   const [year, month] = iso.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(
-    undefined,
-    MONTH_LABEL_OPTIONS
-  );
+  return new Date(Date.UTC(year, month - 1, 1)).toLocaleDateString(undefined, {
+    ...options,
+    timeZone: "UTC",
+  });
 }
 
-/**
- * Column ticks for the header. Day columns are only readable when zoomed in,
- * so coarser scales fall back to one tick per week.
- */
-function buildTicks(
-  timelineStart: string,
-  totalDays: number,
-  scale: GanttScale
-): TickMark[] {
-  const ticks: TickMark[] = [];
-
-  for (let offset = 0; offset < totalDays; offset++) {
-    const iso = addDays(timelineStart, offset);
-
-    if (scale.id === "days") {
-      ticks.push({
-        iso,
-        offset,
-        label: iso.slice(8),
-        major: isFirstOfMonth(iso),
-      });
-      continue;
-    }
-
-    // Mondays anchor the coarser scales
-    if (dayOfWeek(iso) !== 1) continue;
-    ticks.push({
-      iso,
-      offset,
-      label: scale.id === "weeks" ? iso.slice(5) : "",
-      major: false,
+/** The label of a header band: a month, a quarter or a year. */
+function bandLabel(iso: string, unit: HeaderLayout["band"]): string {
+  if (unit === "month") return formatMonth(iso);
+  if (unit === "quarter") {
+    return t("gantt.quarter_band", {
+      quarter: quarterOf(iso),
+      year: iso.slice(0, 4),
     });
   }
-
-  return ticks;
+  return iso.slice(0, 4);
 }
 
-function buildMonthBands(
-  timelineStart: string,
-  totalDays: number
-): Array<{ iso: string; offset: number; days: number }> {
-  const bands: Array<{ iso: string; offset: number; days: number }> = [];
-
-  for (let offset = 0; offset < totalDays; offset++) {
-    const iso = addDays(timelineStart, offset);
-    if (offset === 0 || isFirstOfMonth(iso)) {
-      bands.push({ iso, offset, days: 0 });
-    }
-    bands[bands.length - 1].days += 1;
-  }
-
-  return bands;
+/** The label of a header column, whose span starts on `iso`. */
+function tickLabel(iso: string, unit: HeaderLayout["tick"]): string {
+  if (unit === "day") return iso.slice(8);
+  if (unit === "week") return iso.slice(5);
+  if (unit === "month") return formatMonth(iso, MONTH_TICK_OPTIONS);
+  return t("gantt.quarter_tick", { quarter: quarterOf(iso) });
 }
 
 export function GanttChart({
@@ -342,7 +310,8 @@ export function GanttChart({
   timelineStart,
   timelineEnd,
   today,
-  scale,
+  dayWidth,
+  compact,
   app,
   palette,
   colorOverrides,
@@ -366,6 +335,7 @@ export function GanttChart({
   onStartLink,
   onShowInMap,
   onToggleCollapse,
+  onFocusBranch,
   onSetParent,
   onEditFinance,
   onAddTag,
@@ -380,6 +350,7 @@ export function GanttChart({
   labelWidth,
   onLabelWidthChange,
 }: GanttChartProps) {
+  const rowHeight = compact ? COMPACT_ROW_HEIGHT : ROW_HEIGHT;
   const gridRef = useRef<HTMLDivElement | null>(null);
   const resizeRef = useRef<{ startX: number; startWidth: number } | null>(null);
   const labelsRef = useRef<HTMLDivElement | null>(null);
@@ -492,10 +463,10 @@ export function GanttChart({
       if (!container) return null;
 
       // The label header spans the timeline header lanes plus its border
-      const headerHeight = ROW_HEIGHT * headerRows + 1;
+      const headerHeight = rowHeight * headerRows + 1;
       const offset =
         clientY - container.getBoundingClientRect().top - headerHeight;
-      const index = Math.floor(offset / ROW_HEIGHT);
+      const index = Math.floor(offset / rowHeight);
       if (index < 0) {
         const first = lines.find((line) => line.orderId !== null);
         return first?.orderId
@@ -512,8 +483,8 @@ export function GanttChart({
       }
       if (!line?.orderId) return null;
 
-      const withinRow = offset - clamped * ROW_HEIGHT;
-      const edge = (ROW_HEIGHT * (1 - NEST_BAND)) / 2;
+      const withinRow = offset - clamped * rowHeight;
+      const edge = (rowHeight * (1 - NEST_BAND)) / 2;
 
       // Only a task can hold another task. A milestone marks a date and owns
       // nothing, so its middle goes on meaning "drop after this one".
@@ -522,16 +493,16 @@ export function GanttChart({
         line.orderId !== movedId &&
         canNestInto(movedId, line.orderId);
 
-      if (nestable && withinRow >= edge && withinRow <= ROW_HEIGHT - edge) {
+      if (nestable && withinRow >= edge && withinRow <= rowHeight - edge) {
         return { id: line.orderId, placement: "inside" };
       }
 
       return {
         id: line.orderId,
-        placement: withinRow < ROW_HEIGHT / 2 ? "before" : "after",
+        placement: withinRow < rowHeight / 2 ? "before" : "after",
       };
     },
-    [canNestInto, headerRows, lines, reorderable]
+    [canNestInto, headerRows, lines, reorderable, rowHeight]
   );
 
   /** A bar dragged up or down shows the same drop indicator as a row drag. */
@@ -612,25 +583,26 @@ export function GanttChart({
   const todayOffset = diffDays(timelineStart, today);
   const todayVisible = todayOffset >= 0 && todayOffset < totalDays;
 
+  const layout = headerLayout(dayWidth);
   const ticks = useMemo(
-    () => buildTicks(timelineStart, totalDays, scale),
-    [timelineStart, totalDays, scale]
+    () => buildHeaderTicks(timelineStart, totalDays, dayWidth),
+    [timelineStart, totalDays, dayWidth]
   );
-  const months = useMemo(
-    () => buildMonthBands(timelineStart, totalDays),
-    [timelineStart, totalDays]
+  const bands = useMemo(
+    () => buildSpans(timelineStart, totalDays, layout.band),
+    [timelineStart, totalDays, layout.band]
   );
 
   // Geometry the whole chart shares, as CSS variables on the scrolling grid
   useLayoutEffect(() => {
     const el = gridRef.current;
     if (!el) return;
-    el.style.setProperty("--gantt-day-width", `${scale.dayWidth}px`);
+    el.style.setProperty("--gantt-day-width", `${dayWidth}px`);
     el.style.setProperty("--gantt-total-days", String(totalDays));
-    el.style.setProperty("--gantt-row-height", `${ROW_HEIGHT}px`);
+    el.style.setProperty("--gantt-row-height", `${rowHeight}px`);
     el.style.setProperty("--gantt-today-offset", String(todayOffset));
     el.style.setProperty("--gantt-header-rows", String(headerRows));
-  }, [headerRows, scale.dayWidth, totalDays, todayOffset]);
+  }, [headerRows, dayWidth, rowHeight, totalDays, todayOffset]);
 
   // Written separately from the geometry above so a resize drag can update it
   // without disturbing anything else
@@ -748,7 +720,8 @@ export function GanttChart({
         lineIndexById,
         dependencies,
         timelineStart,
-        scale.dayWidth,
+        dayWidth,
+        rowHeight,
         highlight,
         showCriticalPath ? criticalEdgeKeys : EMPTY_KEYS
       ),
@@ -757,7 +730,8 @@ export function GanttChart({
       lineIndexById,
       dependencies,
       timelineStart,
-      scale.dayWidth,
+      dayWidth,
+      rowHeight,
       highlight,
       showCriticalPath,
       criticalEdgeKeys,
@@ -765,6 +739,11 @@ export function GanttChart({
   );
 
   /** What the analysis says about one row, for the bar to draw. */
+  const isAtRisk = useCallback(
+    (taskId: string) => risksByTaskId.has(taskId),
+    [risksByTaskId]
+  );
+
   const analysisFor = useCallback(
     (taskId: string) => ({
       critical: showCriticalPath && criticalIds.has(taskId),
@@ -847,7 +826,12 @@ export function GanttChart({
       .join(" ");
 
   return (
-    <div className="project-planner-gantt" ref={gridRef}>
+    <div
+      className={`project-planner-gantt${
+        compact ? " project-planner-gantt--compact" : ""
+      }`}
+      ref={gridRef}
+    >
       {/* One scroll container for both panes: vertical scrolling keeps the
           labels aligned with their rows, and the label column stays pinned
           during horizontal scrolling via `position: sticky`. */}
@@ -939,7 +923,9 @@ export function GanttChart({
                   <button
                     className="project-planner-gantt__twisty"
                     title={
-                      line.collapsed ? t("gantt.expand") : t("gantt.collapse")
+                      line.collapsed
+                        ? t("gantt.expand_hint")
+                        : t("gantt.collapse_hint")
                     }
                     aria-label={
                       line.collapsed ? t("gantt.expand") : t("gantt.collapse")
@@ -947,7 +933,7 @@ export function GanttChart({
                     aria-expanded={!line.collapsed}
                     onClick={(event) => {
                       event.stopPropagation();
-                      onToggleCollapse(line.row.task.id);
+                      onToggleCollapse(line.row.task.id, event.altKey);
                     }}
                   >
                     {line.collapsed ? (
@@ -1000,6 +986,19 @@ export function GanttChart({
                       : ""
                   }`}
                 >
+                  {line.hasChildren && (
+                    <button
+                      className="project-planner-gantt__row-action"
+                      title={t("gantt.focus_branch")}
+                      aria-label={t("gantt.focus_branch")}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onFocusBranch(line.row.task.id);
+                      }}
+                    >
+                      <Focus size={12} />
+                    </button>
+                  )}
                   <button
                     className="project-planner-gantt__row-action"
                     title={t("gantt.add_tag")}
@@ -1087,14 +1086,14 @@ export function GanttChart({
         <div className="project-planner-gantt__timeline">
           <div className="project-planner-gantt__header">
             <div className="project-planner-gantt__months">
-              {months.map((month) => (
+              {bands.map((band) => (
                 <div
-                  key={month.iso}
+                  key={band.iso}
                   className="project-planner-gantt__month"
-                  ref={setRowRef(month.offset, month.days)}
+                  ref={setRowRef(band.offset, band.days)}
                 >
                   <span className="project-planner-gantt__month-label">
-                    {formatMonth(month.iso)}
+                    {bandLabel(band.iso, layout.band)}
                   </span>
                 </div>
               ))}
@@ -1105,10 +1104,10 @@ export function GanttChart({
                   key={tick.iso}
                   className={`project-planner-gantt__tick ${
                     tick.major ? "project-planner-gantt__tick--major" : ""
-                  } ${isWeekend(tick.iso) ? "project-planner-gantt__tick--weekend" : ""}`}
-                  ref={setRowRef(tick.offset, 1)}
+                  } ${tick.weekend ? "project-planner-gantt__tick--weekend" : ""}`}
+                  ref={setRowRef(tick.offset, tick.days)}
                 >
-                  {tick.label}
+                  {tick.labelled ? tickLabel(tick.iso, layout.tick) : ""}
                 </div>
               ))}
             </div>
@@ -1121,7 +1120,7 @@ export function GanttChart({
           </div>
 
           <div className="project-planner-gantt__body">
-            {scale.id === "days" &&
+            {layout.shadeWeekends &&
               Array.from({ length: totalDays }, (_, offset) => {
                 const iso = addDays(timelineStart, offset);
                 if (!isWeekend(iso)) return null;
@@ -1138,8 +1137,8 @@ export function GanttChart({
 
             <svg
               className="project-planner-gantt__arrows"
-              width={totalDays * scale.dayWidth}
-              height={Math.max(lines.length, 1) * ROW_HEIGHT}
+              width={totalDays * dayWidth}
+              height={Math.max(lines.length, 1) * rowHeight}
             >
               {arrowPaths.map((path) => (
                 <path
@@ -1185,7 +1184,7 @@ export function GanttChart({
                     milestone={line.milestone}
                     status={milestoneStatus(line.milestone, today)}
                     offsetDays={diffDays(timelineStart, line.milestone.date)}
-                    dayWidth={scale.dayWidth}
+                    dayWidth={dayWidth}
                     onMove={onMoveMilestone}
                     onEdit={onEditMilestone}
                   />
@@ -1198,6 +1197,13 @@ export function GanttChart({
                     "project-planner-gantt__row"
                   )}
                 >
+                  {line.rollup && (
+                    <GanttRollup
+                      rows={line.rollup}
+                      timelineStart={timelineStart}
+                      isAtRisk={isAtRisk}
+                    />
+                  )}
                   <GanttBar
                     task={line.row.task}
                     bar={line.row.bar}
@@ -1205,7 +1211,7 @@ export function GanttChart({
                     summary={line.hasChildren}
                     analysis={analysisFor(line.row.task.id)}
                     timelineStart={timelineStart}
-                    dayWidth={scale.dayWidth}
+                    dayWidth={dayWidth}
                     onCommit={onCommit}
                     onCascadePreview={previewCascade}
                     onRegister={registerBar}
@@ -1230,7 +1236,7 @@ export function GanttChart({
                   milestone={milestone}
                   status={milestoneStatus(milestone, today)}
                   offsetDays={diffDays(timelineStart, milestone.date)}
-                  dayWidth={scale.dayWidth}
+                  dayWidth={dayWidth}
                   onMove={onMoveMilestone}
                   onEdit={onEditMilestone}
                 />
@@ -1259,6 +1265,7 @@ function buildArrowPaths(
   dependencies: GanttDependency[],
   timelineStart: string,
   dayWidth: number,
+  rowHeight: number,
   highlight: ConnectionHighlight,
   criticalEdgeKeys: Set<string>
 ): ArrowPath[] {
@@ -1273,9 +1280,9 @@ function buildArrowPaths(
     }
 
     const fromX = (diffDays(timelineStart, from.bar.end) + 1) * dayWidth;
-    const fromY = fromLine * ROW_HEIGHT + ROW_HEIGHT / 2;
+    const fromY = fromLine * rowHeight + rowHeight / 2;
     const toX = diffDays(timelineStart, to.bar.start) * dayWidth;
-    const toY = toLine * ROW_HEIGHT + ROW_HEIGHT / 2;
+    const toY = toLine * rowHeight + rowHeight / 2;
 
     const gutter = Math.max(8, dayWidth / 2);
     const midX = toX - gutter > fromX ? toX - gutter : fromX + gutter;

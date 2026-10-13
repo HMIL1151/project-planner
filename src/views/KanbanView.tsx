@@ -106,12 +106,12 @@ export default function KanbanView({ settings, plugin }: KanbanViewProps) {
     (options: { notify?: boolean } = {}) => {
       setIsLoading(true);
       window.setTimeout(() => {
-        setTasks(getAllTasks(app));
+        setTasks(getAllTasks(app, settings.taskSource));
         setIsLoading(false);
         if (options.notify) new Notice(t("kanban.reloaded"));
       }, 0);
     },
-    [app]
+    [app, settings.taskSource]
   );
 
   useEffect(() => {

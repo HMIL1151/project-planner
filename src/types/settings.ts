@@ -3,6 +3,7 @@ import { FilterState } from "./filter-state";
 import { TagColorPalette, TagColorOverrides } from "../lib/tag-color-manager";
 import { EdgeStyleOverrides } from "../lib/edge-style-manager";
 import { GanttMilestone } from "../lib/gantt-milestones";
+import { DEFAULT_GANTT_SCALE, GanttScaleId } from "../lib/gantt-scale";
 import { KanbanGroupBy } from "../lib/kanban-buckets";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 import { DEFAULT_RATE_NOTE_PATH } from "../lib/rate-book-note";
@@ -14,6 +15,9 @@ export interface FilterPreset {
 }
 
 export interface ProjectPlannerSettings {
+  // Dataview source every view reads its tasks from; empty means the vault
+  taskSource: string;
+
   showPriorities: boolean;
   showTags: boolean;
   showStatusCounts: boolean;
@@ -32,6 +36,10 @@ export interface ProjectPlannerSettings {
 
   // Width of the Gantt view's task-name column, in pixels
   ganttLabelWidth: number;
+  // How much of the timeline the Gantt tab shows across its width
+  ganttScale: GanttScaleId;
+  // Draw Gantt rows slimmer, so more of a long plan fits on screen
+  ganttCompactRows: boolean;
   // Manual Gantt row order, as task IDs
   ganttTaskOrder: string[];
   // Gantt parents whose children are folded away, as task IDs
@@ -80,6 +88,8 @@ export interface ProjectPlannerSettings {
 }
 
 export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
+  taskSource: "",
+
   showPriorities: true,
   showTags: true,
   showStatusCounts: true,
@@ -96,6 +106,8 @@ export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
   tagColorOverrides: {},
 
   ganttLabelWidth: 260,
+  ganttScale: DEFAULT_GANTT_SCALE,
+  ganttCompactRows: false,
   ganttTaskOrder: [],
   ganttCollapsedTaskIds: [],
   ganttDateOrder: false,

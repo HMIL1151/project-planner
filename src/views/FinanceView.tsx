@@ -62,11 +62,11 @@ export default function FinanceView({ settings, plugin }: FinanceViewProps) {
       );
       setBook(loaded);
       setRateNoteFound(found);
-      setTasks(getAllTasks(app));
+      setTasks(getAllTasks(app, settings.taskSource));
       setIsLoading(false);
       if (options.notify) new Notice(t("finance.reloaded"));
     },
-    [app, settings.financeRateNotePath]
+    [app, settings.financeRateNotePath, settings.taskSource]
   );
 
   useEffect(() => {

@@ -15,6 +15,7 @@ import {
   addSignToTaskInFile,
   removeSignFromTaskInFile,
   getTaskDateProperties,
+  getAllTasks,
 } from "../src/lib/utils";
 import { NoteTask } from "../src/types/note-task";
 import { App, Vault } from "./mocks/obsidian";
@@ -977,5 +978,53 @@ describe("parseTaskLine edge cases", () => {
     const task = parseTaskLine("- [ ] My task #work #urgent", "test.md");
     expect(task?.tags).toContain("work");
     expect(task?.tags).toContain("urgent");
+  });
+});
+
+describe("getAllTasks with a task source", () => {
+  const noteFiles = [
+    { path: "Projects/Alpha/design.md", basename: "design", extension: "md" },
+    { path: "Projects/Beta/build.md", basename: "build", extension: "md" },
+  ];
+
+  function makeApp(pages: (source?: string) => unknown[]) {
+    return {
+      plugins: { plugins: { dataview: { api: { pages } } } },
+      vault: { getMarkdownFiles: () => noteFiles },
+      metadataCache: {
+        getFileCache: () => ({ frontmatter: { tags: ["task"] } }),
+        getFirstLinkpathDest: () => null,
+      },
+    } as unknown as Parameters<typeof getAllTasks>[0];
+  }
+
+  it("reads every note task when there is no source", () => {
+    const pages = jest.fn(() => []);
+    const tasks = getAllTasks(makeApp(pages));
+    expect(pages).toHaveBeenCalledWith(undefined);
+    expect(tasks.map((task) => task.link)).toEqual([
+      "Projects/Alpha/design.md",
+      "Projects/Beta/build.md",
+    ]);
+  });
+
+  it("hands the source to Dataview and keeps only the notes it returns", () => {
+    const pages = jest.fn(() => [
+      { file: { path: "Projects/Alpha/design.md" } },
+    ]);
+    const tasks = getAllTasks(makeApp(pages), '"Projects/Alpha"');
+    expect(pages).toHaveBeenCalledWith('"Projects/Alpha"');
+    expect(tasks.map((task) => task.link)).toEqual([
+      "Projects/Alpha/design.md",
+    ]);
+  });
+
+  it("returns nothing, rather than the whole vault, for a bad source", () => {
+    const warn = jest.spyOn(console, "warn").mockImplementation(() => {});
+    const pages = jest.fn(() => {
+      throw new Error("parse error");
+    });
+    expect(getAllTasks(makeApp(pages), '"unclosed')).toEqual([]);
+    warn.mockRestore();
   });
 });

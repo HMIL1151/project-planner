@@ -67,6 +67,13 @@
     "scale_days": "日",
     "scale_weeks": "周",
     "scale_months": "月",
+    "scale_window": "时段",
+    "scale_window_desc": "在图表宽度内显示这么多个月",
+    "scale_window_months": "{{count}} 个月",
+    "scale_fit": "适应",
+    "scale_fit_desc": "让整个计划适应图表宽度",
+    "quarter_band": "{{year}} 年第 {{quarter}} 季度",
+    "quarter_tick": "Q{{quarter}}",
     "search_placeholder": "搜索任务",
     "hide_completed": "隐藏已完成",
     "task_count": "{{n}} 个任务",
@@ -113,6 +120,11 @@
     "link_failed": "无法链接这些任务",
     "linking_hint": "正在从“{{task}}”创建链接 — 点击应被其阻塞的任务。",
     "linking_cancel": "取消",
+    "compact_rows": "紧凑",
+    "compact_rows_desc": "缩小行高，让长计划在屏幕上显示更多内容",
+    "focus_branch": "只显示此分支",
+    "focus_hint": "仅显示“{{task}}”、其中的任务及其上级任务。",
+    "focus_clear": "显示全部",
     "skip_weekends": "工作日",
     "skip_weekends_desc": "按工作日计算时长并避开周末：周五开始、需要 4 天的任务将在下周三结束",
     "moved_together": "已移动 {{n}} 个任务",
@@ -186,7 +198,16 @@
     "parent_failed": "无法更改此任务的上级任务",
     "undo_set_parent": "更改了“{{task}}”的上级任务",
     "bar_summary_tooltip": "{{start}} 至 {{end}} — 其中所有子任务的跨度",
-    "legend_summary": "子任务汇总"
+    "legend_summary": "子任务汇总",
+    "collapse_hint": "折叠其中的子任务（Alt 点击：整个分支）",
+    "expand_hint": "展开其中的子任务（Alt 点击：整个分支）",
+    "outline": "层级",
+    "outline_desc": "将图表折叠到指定深度，之后仍可逐行展开",
+    "outline_level_desc": "显示 {{level}} 层任务",
+    "outline_all": "全部",
+    "outline_all_desc": "展开所有行",
+    "legend_rollup": "折叠行中的任务",
+    "view_title_project": "甘特图：{{project}}"
   },
   "kanban": {
     "view_title": "任务看板",
@@ -450,7 +471,10 @@
     "finance_currency": "货币",
     "finance_currency_desc": "显示成本所用的货币；笔记中的费率为纯数字",
     "finance_include_inferred": "包含建议日期",
-    "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务"
+    "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务",
+    "task_source": "任务来源",
+    "task_source_desc": "所有视图读取任务的库范围，使用 Dataview FROM 来源语法。留空表示整个库。",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "状态",
@@ -574,7 +598,8 @@
     "pick_note_placeholder": "选择笔记...",
     "dataview_required": "Project Planner需要 Dataview 插件。",
     "invalid_json": "此Project Planner嵌入块包含无效的 JSON。请通过命令面板重新插入以修复。",
-    "legacy_format": "此Project Planner嵌入块使用过时的格式。请通过命令面板重新插入以迁移。"
+    "legacy_format": "此Project Planner嵌入块使用过时的格式。请通过命令面板重新插入以迁移。",
+    "open_in_tab": "在标签页中打开"
   },
   "finance": {
     "menu_item": "财务…",
@@ -780,5 +805,8 @@
     "issue_allocations_off": "该任务的分配比例合计为 {{total}}%，而非 100%",
     "issue_no_allocations": "已记录工时但未分配人员",
     "issue_inferred_schedule": "成本建立在估算日期上"
+  },
+  "task_source": {
+    "invalid": "Project Planner：Dataview 无法读取任务来源 {{source}}，请检查语法。"
   }
 }
