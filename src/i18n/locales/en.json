@@ -186,7 +186,8 @@
     "parent_failed": "Could not change which task this one sits inside",
     "undo_set_parent": "changed what \"{{task}}\" sits inside",
     "bar_summary_tooltip": "{{start}} to {{end}} — the span of the tasks inside this one",
-    "legend_summary": "Summary of nested tasks"
+    "legend_summary": "Summary of nested tasks",
+    "view_title_project": "Gantt: {{project}}"
   },
   "kanban": {
     "view_title": "Tasks board",
@@ -450,7 +451,10 @@
     "finance_currency": "Currency",
     "finance_currency_desc": "Currency costs are shown in; rates in the note are plain numbers",
     "finance_include_inferred": "Include suggested dates",
-    "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written"
+    "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written",
+    "task_source": "Task source",
+    "task_source_desc": "Which part of the vault every view reads tasks from, written as a Dataview FROM source. Leave empty for the whole vault.",
+    "task_source_placeholder": "-\"Archive\""
   },
   "filters": {
     "status": "Status",
@@ -574,7 +578,8 @@
     "pick_note_placeholder": "Choose a note...",
     "dataview_required": "Project Planner requires the Dataview plugin.",
     "invalid_json": "This Project Planner embed contains invalid JSON. Re-insert it using the command palette to fix it.",
-    "legacy_format": "This Project Planner embed uses an outdated format. Re-insert it using the command palette to migrate it."
+    "legacy_format": "This Project Planner embed uses an outdated format. Re-insert it using the command palette to migrate it.",
+    "open_in_tab": "Open in a tab"
   },
   "finance": {
     "menu_item": "Finance…",
@@ -780,5 +785,8 @@
     "issue_allocations_off": "the shares on this task total {{total}}%, not 100%",
     "issue_no_allocations": "hours are recorded but nobody is allocated",
     "issue_inferred_schedule": "the cost rests on estimated dates"
+  },
+  "task_source": {
+    "invalid": "Project Planner: Dataview could not read the task source {{source}}. Check its syntax."
   }
 }

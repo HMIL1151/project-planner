@@ -14,6 +14,9 @@ export interface FilterPreset {
 }
 
 export interface ProjectPlannerSettings {
+  // Dataview source every view reads its tasks from; empty means the vault
+  taskSource: string;
+
   showPriorities: boolean;
   showTags: boolean;
   showStatusCounts: boolean;
@@ -80,6 +83,8 @@ export interface ProjectPlannerSettings {
 }
 
 export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
+  taskSource: "",
+
   showPriorities: true,
   showTags: true,
   showStatusCounts: true,

@@ -1,6 +1,6 @@
 # Embedding a Project Planner
 
-You can embed a fully interactive Project Planner graph directly inside any note using a fenced code block. The embedded graph supports panning, zooming, and filtering — the same as the main view.
+You can embed a fully interactive Project Planner graph directly inside any note using a fenced code block. The embedded graph supports panning, zooming, and filtering — the same as the main view. A second block, [`project-planner-gantt`](#a-gantt-chart-in-a-note), draws a Gantt chart the same way.
 
 !!! note
     Blocks tagged `tasks-map` — the name this plugin used before it was renamed — are still rendered, so notes written against the older plugin keep working. New blocks should use `project-planner`.
@@ -79,6 +79,53 @@ All fields under `config` are optional. Omitted fields use their defaults.
 | `showPresetsPanel` | `boolean` | `true` | Show the saved filters panel |
 | `showUnlinkedPanel` | `boolean` | `true` | Show the unlinked tasks panel |
 | `showStatusCounts` | `boolean` | `true` | Show the status counts overlay |
+
+## Choosing which tasks a block shows
+
+Both blocks take an optional top-level `source` key that decides which tasks the block reads at all. It is what lets one vault hold a separate plan per project: put a block in each project's note and point it at that project's tasks.
+
+````markdown title="Only the Alpha project"
+```project-planner
+{
+  "source": { "folders": ["Projects/Alpha"] }
+}
+```
+````
+
+| Field     | Type       | Description                                                                 |
+| --------- | ---------- | --------------------------------------------------------------------------- |
+| `folders` | `string[]` | Tasks in these folders, subfolders included                                 |
+| `files`   | `string[]` | Tasks in these notes, as paths from the vault root (`"Work/plan.md"`)       |
+| `tags`    | `string[]` | Tasks in notes carrying one of these tags, with or without the `#`          |
+| `query`   | `string`   | Any other [Dataview source](https://blacksmithgu.github.io/obsidian-dataview/reference/sources/), for what the lists cannot say |
+
+A task is in when it matches any of them. For an exclusion, write it in `query`, for example `"query": "\"Projects\" and -\"Projects/Old\""`. Without `source`, a block reads every task, subject to the vault-wide [task source](settings.md#task-source) setting. When both are set, a task has to match both.
+
+`source` decides what is loaded. `filter.selectedFiles` only hides tasks that were already loaded, so in a large vault `source` is the one to use.
+
+## A Gantt chart in a note
+
+A block tagged `project-planner-gantt` draws the [Gantt chart](gantt.md) inside the note. Its body is JSON with two optional keys, `source` (described [above](#choosing-which-tasks-a-block-shows)) and `config`.
+
+````markdown title="Alpha project plan"
+```project-planner-gantt
+{
+  "source": {
+    "folders": ["Projects/Alpha"],
+    "files": ["Meetings/alpha-kickoff.md"]
+  },
+  "config": { "height": 600 }
+}
+```
+````
+
+| Config field | Type     | Default | Description                     |
+| ------------ | -------- | ------- | ------------------------------- |
+| `height`     | `number` | `500`   | Height of the chart in pixels   |
+
+The chart works the same as the Gantt tab: bars can be dragged, tasks added and linked. The **Open in a tab** button beside it opens the chart in a full tab with the same tasks, named after the note. The tab keeps its project when Obsidian restarts.
+
+Row order, folded rows and milestones are still shared by every chart. Rows are ordered by task, so projects do not disturb each other's order, but a milestone shows on every chart.
 
 ## Error states
 
