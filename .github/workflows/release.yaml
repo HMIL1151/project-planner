@@ -1,15 +1,9 @@
 name: 🚚 Release
 
 on:
-  pull_request:
-    types:
-      - opened
-      - edited
-      - labeled
-      - unlabeled
-      - synchronize
-    branches:
-      - main
+  # Push only. Every job below is gated to `github.event_name == 'push'` or is
+  # only consumed by one that is, so running this on a pull request did nothing
+  # except add a second failing check behind the fork-PR approval gate.
   push:
     branches:
       - main
