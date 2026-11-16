@@ -40,7 +40,7 @@
         "eslint-plugin-react-hooks": "^7.0.1",
         "globals": "^17.0.0",
         "jest": "^30.2.0",
-        "obsidian": "latest",
+        "obsidian": "^1.14.4",
         "prettier": "^3.6.2",
         "stylelint": "^17.11.1",
         "stylelint-config-standard": "^40.0.0",
