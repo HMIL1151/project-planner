@@ -1,0 +1,25 @@
+# Normalise line endings. Without this, `core.autocrlf=true` on Windows hands
+# Prettier CRLF files while .prettierrc.json asks for LF, so `npm run format`
+# fails locally on files nobody has touched and passes in CI. Everything is
+# stored and checked out as LF; Git still detects binaries on its own.
+* text=auto eol=lf
+
+# Keep these LF regardless of what detection thinks.
+*.ts    text eol=lf
+*.tsx   text eol=lf
+*.js    text eol=lf
+*.mjs   text eol=lf
+*.json  text eol=lf
+*.css   text eol=lf
+*.md    text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+
+# Binary, so never touch the bytes.
+*.png   binary
+*.jpg   binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
