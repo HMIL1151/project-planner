@@ -106,17 +106,24 @@ import {
   GANTT_VIEW_TYPE,
   focusTargetFor,
 } from "src/lib/view-focus";
+import { combineSources } from "src/lib/task-source";
 import { t } from "../i18n";
 
 interface GanttViewProps {
   settings: ProjectPlannerSettings;
   plugin: ProjectPlannerPlugin;
+  /** Dataview source for this chart's project, narrowing the vault-wide one */
+  source?: string;
 }
 
 /** Stable empty map, so switching the warnings off is not a new prop. */
 const NO_RISKS: Map<string, ScheduleRisk[]> = new Map();
 
-export default function GanttView({ settings, plugin }: GanttViewProps) {
+export default function GanttView({
+  settings,
+  plugin,
+  source = "",
+}: GanttViewProps) {
   const app = useApp();
   const [tasks, setTasks] = useState<BaseTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -155,12 +162,12 @@ export default function GanttView({ settings, plugin }: GanttViewProps) {
     (options: { notify?: boolean } = {}) => {
       setIsLoading(true);
       window.setTimeout(() => {
-        setTasks(getAllTasks(app));
+        setTasks(getAllTasks(app, combineSources(settings.taskSource, source)));
         setIsLoading(false);
         if (options.notify) new Notice(t("gantt.reloaded"));
       }, 0);
     },
-    [app]
+    [app, settings.taskSource, source]
   );
 
   useEffect(() => {

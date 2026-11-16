@@ -6,6 +6,9 @@ plan when work happens rather than just how it connects.
 Open it from the **Gantt chart** ribbon icon, or with the **Open Gantt view**
 command.
 
+!!! tip
+    In a large vault, give each project its own chart: a [`project-planner-gantt` block](embedding.md#a-gantt-chart-in-a-note) in the project's note shows only that project's tasks.
+
 ## Every task gets a bar
 
 Most tasks in a real vault have no dates, and a chart that only drew dated

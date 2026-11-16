@@ -12,6 +12,21 @@ Choose the display language for the plugin interface.
 | Nederlands (Dutch)            | Dutch translation              |
 | 简体中文 (Simplified Chinese) | Simplified Chinese translation |
 
+## Task Source
+
+Which part of the vault every view reads its tasks from. Leave it empty to read the whole vault.
+
+The value is a [Dataview source](https://blacksmithgu.github.io/obsidian-dataview/reference/sources/), the part of a query that follows `FROM`:
+
+| Example                         | Reads tasks from                         |
+| ------------------------------- | ---------------------------------------- |
+| `"Projects"`                    | The `Projects` folder                    |
+| `-"Archive"`                    | Everywhere except the `Archive` folder   |
+| `#work`                         | Notes tagged `#work`                     |
+| `"Projects" and -"Projects/Old"` | `Projects`, leaving out `Projects/Old` |
+
+A [Gantt or graph block](embedding.md#choosing-which-tasks-a-block-shows) in a note narrows this further to one project. If Dataview cannot read the source, the views show no tasks and a notice says why.
+
 ## Display Options
 
 Toggle what information is shown on task nodes in the graph.

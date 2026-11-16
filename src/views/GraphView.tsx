@@ -69,6 +69,7 @@ import UnlinkedTasksPanel, {
 import { GraphEmptyState } from "src/components/graph-empty-state";
 import ControlsPanel from "src/components/controls-panel";
 import GraphActionBar from "src/components/graph-action-bar";
+import { combineSources } from "src/lib/task-source";
 import { t } from "../i18n";
 import ProjectPlannerPlugin from "../main";
 import {
@@ -92,6 +93,8 @@ interface GraphViewProps {
   plugin: ProjectPlannerPlugin;
   embedConfig?: EmbedConfig;
   reloadRef?: React.MutableRefObject<(() => void) | null>;
+  /** Dataview source for an embed's project, narrowing the vault-wide one */
+  source?: string;
 }
 
 export default function GraphView({
@@ -101,6 +104,7 @@ export default function GraphView({
   plugin,
   embedConfig,
   reloadRef,
+  source = "",
 }: GraphViewProps) {
   const embed = { ...DEFAULT_EMBED_CONFIG, ...embedConfig };
   const app = useApp();
@@ -216,7 +220,10 @@ export default function GraphView({
       setDroppedTaskIds(new Set());
       setNewlyCreatedTaskIds(new Set());
       droppedNodePositions.current = new Map();
-      const newTasks = getAllTasks(app);
+      const newTasks = getAllTasks(
+        app,
+        combineSources(settings.taskSource, source)
+      );
       setTasks(newTasks);
       const newRegistry = new Map<string, string[]>();
       newTasks.forEach((task) => {
@@ -226,7 +233,7 @@ export default function GraphView({
       setIsLoading(false);
       new Notice("Tasks reloaded");
     }, 0);
-  }, [app]);
+  }, [app, settings.taskSource, source]);
 
   useEffect(() => {
     if (reloadRef) {

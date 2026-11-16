@@ -737,7 +737,9 @@ export async function exportHandoverPack(
 
   try {
     const today = todayIso();
-    const tasks = getAllTasks(app);
+    // Honour the configured task source: a handover pack that ignored it
+    // would ship the folders the user deliberately excluded.
+    const tasks = getAllTasks(app, settings.taskSource);
 
     const notes = draft.includeNotes
       ? await renderVaultNotes(app, owner, (done, total) => {

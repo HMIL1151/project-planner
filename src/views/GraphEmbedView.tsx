@@ -8,10 +8,20 @@ import { ProjectPlannerSettings } from "src/types/settings";
 import { FilterState, DEFAULT_FILTER_STATE } from "src/types/filter-state";
 import { EmbedConfig, DEFAULT_EMBED_CONFIG } from "src/types/embed-config";
 import { TaskStatus } from "src/types/task";
+import {
+  EMPTY_TASK_SOURCE,
+  TaskSourceSpec,
+  coerceTaskSource,
+} from "src/lib/task-source";
 
 // Discriminated result type for filterStateFromSource
 export type ParseResult =
-  | { kind: "ok"; filter: FilterState; config: EmbedConfig }
+  | {
+      kind: "ok";
+      filter: FilterState;
+      config: EmbedConfig;
+      source: TaskSourceSpec;
+    }
   | { kind: "legacy" }
   | { kind: "invalid" };
 
@@ -24,12 +34,15 @@ interface GraphEmbedViewProps {
   plugin: ProjectPlannerPlugin;
   initialFilter: FilterState;
   embedConfig: EmbedConfig;
+  /** Dataview source the block names, already built from its spec */
+  source: string;
 }
 
 export default function GraphEmbedView({
   plugin,
   initialFilter,
   embedConfig,
+  source,
 }: GraphEmbedViewProps) {
   const [settings, setSettings] = useState<ProjectPlannerSettings>({
     ...plugin.settings,
@@ -68,6 +81,7 @@ export default function GraphEmbedView({
               plugin={plugin}
               embedConfig={embedConfig}
               reloadRef={reloadRef}
+              source={source}
             />
           </ReactFlowProvider>
         </div>
@@ -238,6 +252,7 @@ export function filterStateFromSource(source: string): ParseResult {
       kind: "ok",
       filter: { ...DEFAULT_FILTER_STATE },
       config: { ...DEFAULT_EMBED_CONFIG },
+      source: { ...EMPTY_TASK_SOURCE },
     };
   }
   try {
@@ -250,7 +265,7 @@ export function filterStateFromSource(source: string): ParseResult {
       return { kind: "invalid" };
     }
     const obj = parsed as Record<string, unknown>;
-    if ("filter" in obj === false && "config" in obj === false) {
+    if (!("filter" in obj) && !("config" in obj) && !("source" in obj)) {
       // JSON parsed but uses the old flat format
       console.warn(
         "[project-planner] Embed block uses the old flat format. Re-insert it using the command palette to migrate it to the current format."
@@ -269,6 +284,7 @@ export function filterStateFromSource(source: string): ParseResult {
       kind: "ok",
       filter: coerceFilterState(rawFilter),
       config: coerceEmbedConfig(rawConfig),
+      source: coerceTaskSource(obj.source),
     };
   } catch (err) {
     console.warn("[project-planner] Failed to parse embed filter config:", err);

@@ -1,6 +1,7 @@
 import { filterStateFromSource } from "../src/views/GraphEmbedView";
 import { DEFAULT_FILTER_STATE } from "../src/types/filter-state";
 import { DEFAULT_EMBED_CONFIG } from "../src/types/embed-config";
+import { EMPTY_TASK_SOURCE } from "../src/lib/task-source";
 
 describe("filterStateFromSource", () => {
   describe("empty / whitespace source", () => {
@@ -94,6 +95,24 @@ describe("filterStateFromSource", () => {
       const result = filterStateFromSource("{}");
       // {} has no filter or config keys and no other keys → legacy
       expect(result.kind).toBe("legacy");
+    });
+  });
+
+  describe("source", () => {
+    it("reads a source given on its own, without filter or config", () => {
+      const result = filterStateFromSource(
+        JSON.stringify({ source: { folders: ["Projects/Alpha"] } })
+      );
+      expect(result.kind).toBe("ok");
+      if (result.kind !== "ok") return;
+      expect(result.source.folders).toEqual(["Projects/Alpha"]);
+      expect(result.filter).toEqual(DEFAULT_FILTER_STATE);
+    });
+
+    it("defaults to no source, meaning the whole vault", () => {
+      const result = filterStateFromSource(JSON.stringify({ filter: {} }));
+      if (result.kind !== "ok") throw new Error("expected ok");
+      expect(result.source).toEqual(EMPTY_TASK_SOURCE);
     });
   });
 

@@ -375,6 +375,24 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: t("settings.task_source"),
+        desc: t("settings.task_source_desc"),
+        // Hand-rendered rather than bound to a text control: this one saves on
+        // blur or Enter, because every save reloads the views and a half-typed
+        // source is one Dataview cannot read.
+        render: (setting) => {
+          setting.addText((text) => {
+            text
+              .setPlaceholder(t("settings.task_source_placeholder"))
+              .setValue(this.plugin.settings.taskSource);
+            text.inputEl.addEventListener("change", () => {
+              this.plugin.settings.taskSource = text.getValue().trim();
+              void this.plugin.saveSettings();
+            });
+          });
+        },
+      },
+      {
         type: "group",
         heading: t("settings.display_options"),
         items: [
@@ -718,6 +736,21 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
             // Redraw the settings tab with new language
             this.display();
           });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.task_source"))
+      .setDesc(t("settings.task_source_desc"))
+      .addText((text) => {
+        text
+          .setPlaceholder(t("settings.task_source_placeholder"))
+          .setValue(this.plugin.settings.taskSource);
+        // Saved on blur or Enter, not per keystroke: every save reloads the
+        // views, and a half-typed source is one Dataview cannot read
+        text.inputEl.addEventListener("change", () => {
+          this.plugin.settings.taskSource = text.getValue().trim();
+          void this.plugin.saveSettings();
+        });
       });
 
     new Setting(containerEl)
