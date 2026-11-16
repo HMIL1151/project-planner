@@ -904,7 +904,7 @@ describe("getLayoutedElements with groupByProject=true", () => {
     expect(groupNodes[0].data.label).toBe("Alpha");
   });
 
-  it("child task nodes have parentNode set to group id", () => {
+  it("child task nodes have parentId set to group id", () => {
     const tasks = [makeTask({ id: "t1", projects: ["Beta"] })];
     const nodes = createNodesFromTasks(tasks);
     const edges = createEdgesFromTasks(tasks);
@@ -917,7 +917,7 @@ describe("getLayoutedElements with groupByProject=true", () => {
       tasks
     );
     const taskNode = result.find((n) => n.id === "t1");
-    expect(taskNode?.parentNode).toBeDefined();
+    expect(taskNode?.parentId).toBeDefined();
   });
 
   it("tasks with no project are not inside a group", () => {
@@ -933,7 +933,7 @@ describe("getLayoutedElements with groupByProject=true", () => {
       tasks
     );
     const soloNode = result.find((n) => n.id === "solo");
-    expect(soloNode?.parentNode).toBeUndefined();
+    expect(soloNode?.parentId).toBeUndefined();
   });
 });
 

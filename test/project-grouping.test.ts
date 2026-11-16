@@ -106,7 +106,7 @@ describe("createProjectGroupNodes", () => {
     ]);
   });
 
-  it("assigns parentNode to members of a single-project group", () => {
+  it("assigns parentId to members of a single-project group", () => {
     const t1 = makeNoteTask({ id: "t1", projects: ["Alpha"] });
     const tasks = [t1];
     const taskNodes = createNodesFromTasks(tasks);
@@ -121,11 +121,11 @@ describe("createProjectGroupNodes", () => {
     );
 
     const childNode = result.find((n) => n.id === "t1");
-    expect(childNode?.parentNode).toBe("project-group-Alpha");
+    expect(childNode?.parentId).toBe("project-group-Alpha");
     expect(childNode?.extent).toBe("parent");
   });
 
-  it("does not assign parentNode to multi-project tasks", () => {
+  it("does not assign parentId to multi-project tasks", () => {
     const t1 = makeNoteTask({ id: "t1", projects: ["Alpha", "Beta"] });
     const tasks = [t1];
     const taskNodes = createNodesFromTasks(tasks);
@@ -140,10 +140,10 @@ describe("createProjectGroupNodes", () => {
     );
 
     const taskNode = result.find((n) => n.id === "t1");
-    expect(taskNode?.parentNode).toBeUndefined();
+    expect(taskNode?.parentId).toBeUndefined();
   });
 
-  it("does not assign parentNode to no-project tasks", () => {
+  it("does not assign parentId to no-project tasks", () => {
     const t1 = makeNoteTask({ id: "t1", projects: [] });
     const tasks = [t1];
     const taskNodes = createNodesFromTasks(tasks);
@@ -158,7 +158,7 @@ describe("createProjectGroupNodes", () => {
     );
 
     const taskNode = result.find((n) => n.id === "t1");
-    expect(taskNode?.parentNode).toBeUndefined();
+    expect(taskNode?.parentId).toBeUndefined();
   });
 
   it("group node has positive width and height", () => {

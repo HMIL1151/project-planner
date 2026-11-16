@@ -867,7 +867,7 @@ export function getLayoutedElements(
         const pos = projectLocalPositions.get(t.id) ?? { x: 0, y: 0 };
         resultNodes.push({
           ...flatNode,
-          parentNode: groupId,
+          parentId: groupId,
           extent: "parent" as const,
           position: {
             x: pos.x - bbox.minX + PROJECT_GROUP_PADDING,
@@ -1881,7 +1881,7 @@ export function partitionTasksByProject(tasks: BaseTask[]): {
 
 /**
  * Build ReactFlow group nodes (type "projectGroup") and update task nodes so
- * that members carry parentNode / extent / relative positions.
+ * that members carry parentId / extent / relative positions.
  *
  * Returns the combined flat list: [groupNodes..., childTaskNodes..., standaloneNodes...]
  * ready to pass to ReactFlow.
@@ -1962,7 +1962,7 @@ export function createProjectGroupNodes(
     laidOutMemberNodes.forEach((node) => {
       allNodes.push({
         ...node,
-        parentNode: groupId,
+        parentId: groupId,
         extent: "parent" as const,
         position: {
           x: node.position.x + PROJECT_GROUP_PADDING,
