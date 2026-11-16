@@ -1,0 +1,44 @@
+name: ✨ Feature request
+description: A plan you cannot express, or a view that cannot show it.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describe the plan you are trying to run, not only the control you want.
+        Several of the best features here started as "my project looks like
+        this and the chart cannot show it" and were built differently — and
+        better — than the original ask.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to plan
+      description: >
+        The real project, roughly: how many tasks, how they are organised, what
+        you need to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What happens today
+      description: What you do now instead, and where it falls down.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: What you had in mind
+      description: Optional. A sketch, a setting, a syntax — whatever you pictured.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you post
+      options:
+        - label: I searched the open and closed issues for this.
+          required: true
+        - label: This stays in plain Markdown — it does not need a database.

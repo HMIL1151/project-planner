@@ -1,0 +1,7 @@
+# Discussions are off for this repository, so a blank issue stays available as
+# the route for questions. Turn it off here if Discussions are ever enabled.
+blank_issues_enabled: true
+contact_links:
+  - name: 📖 Documentation
+    url: https://hmil1151.github.io/project-planner/
+    about: Setup, the four views, embedding, settings and the task formats.

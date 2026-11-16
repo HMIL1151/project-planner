@@ -1,0 +1,80 @@
+name: 🐞 Bug report
+description: A view shows the wrong thing, or an edit does not land in the vault.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Project Planner reads your tasks through Dataview, so almost every bug
+        comes down to a particular task line in a particular vault. The more of
+        that you can paste below, the faster this gets fixed.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-markdown
+    attributes:
+      label: The Markdown behind it
+      description: >
+        The task line or note frontmatter involved, copied as-is. Rename
+        anything private — the syntax is what matters.
+      render: markdown
+    validations:
+      required: true
+
+  - type: dropdown
+    id: view
+    attributes:
+      label: Which view
+      multiple: true
+      options:
+        - Graph
+        - Gantt
+        - Kanban
+        - Finance
+        - Embedded code block
+        - Task editor
+        - Settings
+        - Not view-specific
+    validations:
+      required: true
+
+  - type: input
+    id: plugin-version
+    attributes:
+      label: Project Planner version
+      placeholder: "1.0.1 — see Settings → Community plugins"
+    validations:
+      required: true
+
+  - type: input
+    id: obsidian-version
+    attributes:
+      label: Obsidian version and platform
+      placeholder: "1.8.10, Windows 11 / macOS 15 / iOS"
+    validations:
+      required: true
+
+  - type: input
+    id: dataview-version
+    attributes:
+      label: Dataview version
+      description: Project Planner cannot render without it.
+      placeholder: "0.5.68"
+    validations:
+      required: true
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output
+      description: >
+        Anything red in the developer console (Ctrl+Shift+I, or Cmd+Option+I on
+        macOS) when the problem happens. Leave blank if there is nothing.
+      render: shell
