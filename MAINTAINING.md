@@ -122,6 +122,13 @@ which is which before promising anything:
 
 Current as of 2026-11-16; delete each line as it is dealt with.
 
+- **`npm run format` always fails locally on Windows, and always passes in
+  CI.** There is no `.gitattributes`, `core.autocrlf` is `true`, and
+  `.prettierrc.json` sets `"endOfLine": "lf"` — so every file Git rewrites on
+  a checkout comes back with CRLF and Prettier flags it. `npx prettier --check
+  --end-of-line auto "src/**"` is the honest local check. Fix properly with a
+  `.gitattributes` holding `* text=auto eol=lf` plus a one-off
+  `git add --renormalize .`, which also spares contributors on Windows.
 - **The emoji labels `.github/labeler.yaml` writes do not exist in this
   repository.** Labels are not copied when a repository is forked, so the PR
   Labeler job has nothing to apply. Either create the nine labels or simplify
