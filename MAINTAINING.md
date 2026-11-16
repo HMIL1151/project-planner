@@ -140,3 +140,12 @@ Current as of 2026-11-16; delete each line as it is dealt with.
 - **Release assets carry no attestation the scanner can find.** The workflow
   does run `actions/attest`, so this is a question of which predicate and
   which action (`actions/attest-build-provenance`) the scanner looks for.
+
+- **The release workflow only works on a commit that came from a pull
+  request.** `🚚 Release`'s *Determine version* job runs `semVersie`, which
+  reads the version bump off the **pull request title**, not the commit
+  message. Push straight to `main` and it retries four times looking for an
+  associated PR, then fails with *Could not find pull request in context* — no
+  release is cut, but `main` carries a red run. So merge through a PR even when
+  you are the only reviewer, and put the `feat:`/`fix:`/`docs:` prefix in the
+  **PR title**.
