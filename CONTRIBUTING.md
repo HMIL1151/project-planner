@@ -1,63 +1,69 @@
 # Contributing
 
-Thanks for being here. Project Planner has one maintainer, so the most useful
-thing you can do before writing code is say what you are about to write.
+Cheers for being here. This is a one-maintainer plugin, so the most useful thing
+you can do before writing code is tell me what you're about to write.
 
-The full developer documentation lives on the docs site under
-[Contributing](https://hmil1151.github.io/project-planner/contributing/) —
+Full developer docs are on the
+[docs site](https://hmil1151.github.io/project-planner/contributing/):
 [Development Environment](https://hmil1151.github.io/project-planner/contributing/development/)
-for setup, and
+for setup,
 [CI & Releases](https://hmil1151.github.io/project-planner/contributing/ci-releases/)
-for how a merge becomes a release. This file is the short version: the ground
-rules, and what to expect from me.
+for how a merge becomes a release. This file is the short version.
 
 ## Reporting a bug
 
-Open an issue with the **Bug report** template.
+Use the **Bug report** template.
 
-Project Planner reads your tasks through Dataview, so a report is only
-reproducible if it says which versions you are on and what the task line or
-note actually looks like. The template asks for exactly that. A screenshot of
-a view is useful; the Markdown behind it is more useful.
+The plugin reads your tasks through Dataview, so a report is only reproducible
+if it says which versions you're on and what the task line or note actually
+looks like. The template asks for exactly that. A screenshot of a view helps.
+The Markdown behind it helps more.
 
 ## Asking for a feature
 
-Open an issue with the **Feature request** template and say what you are
-trying to plan, not only which control you want. Several of the best ideas in
-this plugin arrived as a description of a real project that the views could
-not show, and were built differently — and better — than the original ask.
+Use the **Feature request** template, and say what you're trying to plan rather
+than just which control you want. Some of the best things in here turned up as
+"my project looks like this and the chart can't show it", and got built
+differently, and better, than the original ask.
 
 ## Sending a pull request
 
-Fork, branch from `main`, and open the PR against `main`.
+Fork, branch off `main`, open the PR against `main`.
 
-A PR needs to pass the same checks CI runs, which you can run yourself:
+Run what CI runs:
 
 ```bash
 npm run lint && npm run lint:css && npm run format && npm run build && npm test
 ```
 
-Beyond that, a few rules are load-bearing in this repo and a PR that breaks
-one will be sent back:
+On Windows, `npm run format` will flag every file you've just checked out
+because of line endings. `npx prettier --check --end-of-line auto "src/**"` is
+the honest check until that's sorted.
 
-- **Never edit `main.js` or `styles.css`.** Both are build output. Style
-  changes go in `global.css`.
-- **No user-facing string is hardcoded.** Use `t()` and add the key to all
-  three locale files (`en`, `nl`, `zh-CN`); a missing key ships as a raw key.
+A few rules here are load-bearing, and a PR that breaks one will come back:
+
+- **Never edit `main.js` or `styles.css`.** Both are build output. Style changes
+  go in `global.css`.
+- **No hardcoded user-facing strings.** Use `t()` and add the key to all three
+  locale files (`en`, `nl`, `zh-CN`). A missing key ships as a raw key on
+  screen.
 - **No `any`, no inline `style` props, no runtime `<style>` elements.** ESLint
-  enforces all three.
+  errors on all three.
 - **New logic goes in `src/lib/` with a matching `test/*.test.ts`.** That
-  directory is pure and framework-free, and it is where the test suite lives.
-  React files stay presentational.
-- **Test files are named `.test.ts`, never `.test.tsx`.** Jest's `testMatch`
-  would silently never run a `.tsx` test.
-- **Never hand-edit the version fields** in `package.json`, `manifest.json` or
+  directory is pure and framework-free. React files stay presentational.
+- **Test files are `.test.ts`, never `.test.tsx`.** Jest's `testMatch` would
+  silently never run a `.tsx` test.
+- **Don't hand-edit version fields** in `package.json`, `manifest.json` or
   `versions.json`. The release workflow owns them.
 
-`AGENTS.md` in the repository root holds the detailed style guide — imports,
-naming, React patterns, error handling. Read it before writing code.
+`AGENTS.md` in the repo root has the detailed style guide: imports, naming,
+React patterns, error handling. Worth a read before you write code.
 
-### Scope, and what I am likely to merge
+If you're stacking PRs (branching each off the last), say so in the description
+and tell me the order. It makes a big change reviewable, but only if I merge
+them bottom up.
+
+### Scope, and what I'm likely to merge
 
 <!--
 TODO(human): write this section — it is the one rule only you can set.
@@ -81,4 +87,4 @@ contributors than a promise you will not.
 
 ## Code of conduct
 
-Be decent to each other. I will close threads that are not.
+Be decent to each other. I'll close threads that aren't.
