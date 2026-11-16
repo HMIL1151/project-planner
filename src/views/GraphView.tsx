@@ -1611,11 +1611,11 @@ export default function GraphView({
     (_event, draggedNode) => {
       if (draggedNode.type !== "task") return;
       const dragPos = draggedNode.positionAbsolute ?? draggedNode.position;
-      // Prefer parentNode from current nodes state — ReactFlow 11 may not populate
-      // parentId reliably on the drag-event node snapshot.
+      // Prefer the parent from current nodes state — ReactFlow 11 may not
+      // populate parentId reliably on the drag-event node snapshot.
       const currentNode = nodes.find((n) => n.id === draggedNode.id);
-      const parentNodeId = currentNode?.parentNode ?? draggedNode.parentId;
-      const excludeGroupIds = new Set(parentNodeId ? [parentNodeId] : []);
+      const currentParentId = currentNode?.parentId ?? draggedNode.parentId;
+      const excludeGroupIds = new Set(currentParentId ? [currentParentId] : []);
       updateDragOverHighlights([dragPos], excludeGroupIds);
       updateDropEdge(draggedNode);
     },
@@ -1631,7 +1631,7 @@ export default function GraphView({
         taskNodes
           .map((n) => {
             const currentNode = nodes.find((cn) => cn.id === n.id);
-            return currentNode?.parentNode ?? n.parentId;
+            return currentNode?.parentId ?? n.parentId;
           })
           .filter((id): id is string => !!id)
       );
@@ -1689,7 +1689,7 @@ export default function GraphView({
       let count = 0;
       for (const draggedNode of taskNodes) {
         const currentNode = nodes.find((n) => n.id === draggedNode.id);
-        if (currentNode?.parentNode === targetGroupId) continue;
+        if (currentNode?.parentId === targetGroupId) continue;
         const task = tasks.find((t) => t.id === draggedNode.id);
         if (!(task instanceof NoteTask)) continue;
         await task.addProject(app, targetProjectName);
