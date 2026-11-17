@@ -15,6 +15,7 @@ import {
 } from "../lib/tag-color-manager";
 import { getAllTasks } from "../lib/utils";
 import { normalizeSettingValue } from "../lib/settings-normalize";
+import { parseTaskTags } from "../lib/task-tag-gate";
 import { DEFAULT_COMPANION_FOLDER } from "../lib/companion-note";
 import {
   DEFAULT_RATE_NOTE_PATH,
@@ -375,6 +376,41 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
         },
       },
       {
+        name: t("settings.task_source"),
+        desc: t("settings.task_source_desc"),
+        // Hand-rendered rather than bound to a text control: this one saves on
+        // blur or Enter, because every save reloads the views and a half-typed
+        // source is one Dataview cannot read.
+        render: (setting) => {
+          setting.addText((text) => {
+            text
+              .setPlaceholder(t("settings.task_source_placeholder"))
+              .setValue(this.plugin.settings.taskSource);
+            text.inputEl.addEventListener("change", () => {
+              this.plugin.settings.taskSource = text.getValue().trim();
+              void this.plugin.saveSettings();
+            });
+          });
+        },
+      },
+      {
+        name: t("settings.task_tags"),
+        desc: t("settings.task_tags_desc"),
+        // Same save-on-blur reasoning as the source above, and the stored
+        // value is a list while the control is one line of text.
+        render: (setting) => {
+          setting.addText((text) => {
+            text
+              .setPlaceholder(t("settings.task_tags_placeholder"))
+              .setValue(this.plugin.settings.taskTags.join(", "));
+            text.inputEl.addEventListener("change", () => {
+              this.plugin.settings.taskTags = parseTaskTags(text.getValue());
+              void this.plugin.saveSettings();
+            });
+          });
+        },
+      },
+      {
         type: "group",
         heading: t("settings.display_options"),
         items: [
@@ -718,6 +754,34 @@ export class ProjectPlannerSettingTab extends PluginSettingTab {
             // Redraw the settings tab with new language
             this.display();
           });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.task_source"))
+      .setDesc(t("settings.task_source_desc"))
+      .addText((text) => {
+        text
+          .setPlaceholder(t("settings.task_source_placeholder"))
+          .setValue(this.plugin.settings.taskSource);
+        // Saved on blur or Enter, not per keystroke: every save reloads the
+        // views, and a half-typed source is one Dataview cannot read
+        text.inputEl.addEventListener("change", () => {
+          this.plugin.settings.taskSource = text.getValue().trim();
+          void this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.task_tags"))
+      .setDesc(t("settings.task_tags_desc"))
+      .addText((text) => {
+        text
+          .setPlaceholder(t("settings.task_tags_placeholder"))
+          .setValue(this.plugin.settings.taskTags.join(", "));
+        text.inputEl.addEventListener("change", () => {
+          this.plugin.settings.taskTags = parseTaskTags(text.getValue());
+          void this.plugin.saveSettings();
+        });
       });
 
     new Setting(containerEl)

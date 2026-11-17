@@ -7,9 +7,10 @@ import {
   Vault,
   CachedMetadata,
   FrontMatterCache,
+  Notice,
 } from "obsidian";
 import { TaskStatus, TaskNode, TaskEdge, RawTask } from "src/types/task";
-import { AppWithPlugins } from "src/types/obsidian-internals";
+import { AppWithPlugins, DataviewPage } from "src/types/obsidian-internals";
 import {
   BaseTask,
   TaskInsertPosition,
@@ -35,6 +36,7 @@ import {
 } from "./connection-highlight";
 import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
 import { TaskFactory } from "./task-factory";
+import { gateTasksByTag } from "./task-tag-gate";
 import { Position, Node, Edge } from "reactflow";
 import { t } from "../i18n";
 import { TagColorPalette, TagColorOverrides } from "./tag-color-manager";
@@ -1425,34 +1427,87 @@ export async function removeSignFromTaskInFile(
   });
 }
 
-export function getAllTasks(app: App): BaseTask[] {
-  // Central function to gather tasks from all available sources
-  const allTasks: BaseTask[] = [];
+/**
+ * Every task the plugin can see, or — given a Dataview source — only those in
+ * the part of the vault it names.
+ *
+ * A source is handed to Dataview as is, so it says anything a query's `FROM`
+ * can: `"Projects/Alpha"`, `#alpha`, `"Work" and -"Work/Archive"`. One Dataview
+ * cannot read comes back as no tasks at all, with a notice saying why, rather
+ * than quietly falling back to the whole vault.
+ */
+export function getAllTasks(
+  app: App,
+  source = "",
+  requiredTags: string[] = []
+): BaseTask[] {
+  const pages = readDataviewPages(app, source);
+  if (!pages) return [];
 
-  // Source 1: Dataview plugin tasks
-  allTasks.push(...getAllDataviewTasks(app));
+  // Narrow by source only when Dataview actually answered. Without a source
+  // every note is in, and without Dataview there is no page list to narrow
+  // against — treating its absence as "no pages matched" would hide every
+  // note-based task, which never needed Dataview in the first place.
+  const paths =
+    source.trim() && hasDataviewApi(app)
+      ? new Set(
+          pages
+            .map((page) => page.file?.path)
+            .filter((path): path is string => typeof path === "string")
+        )
+      : null;
 
-  // Source 2: Note-based tasks (notes with #task in frontmatter)
-  allTasks.push(...getNoteTasks(app));
-
-  return allTasks;
+  return [
+    // Source 1: Dataview plugin tasks
+    ...getAllDataviewTasks(app, pages, requiredTags),
+    // Source 2: Note-based tasks (notes with #task in frontmatter)
+    ...getNoteTasks(app, paths),
+  ];
 }
 
-export function getAllDataviewTasks(app: App): BaseTask[] {
-  let tasks: RawTask[] = [];
+/** Whether Dataview is loaded and can answer a page query. */
+function hasDataviewApi(app: App): boolean {
+  return !!(app as AppWithPlugins).plugins?.plugins?.["dataview"]?.api?.pages;
+}
 
+/**
+ * The Dataview pages a source names, or `null` when Dataview rejects it.
+ */
+function readDataviewPages(app: App, source: string): DataviewPage[] | null {
   // `plugins` exists at runtime, it is just not on the public Obsidian App API:
   //     https://blacksmithgu.github.io/obsidian-dataview/api/intro/#plugin-access
   const dataviewApi = (app as AppWithPlugins).plugins?.plugins?.["dataview"]
     ?.api;
-  if (dataviewApi && dataviewApi.pages) {
-    const pages = dataviewApi.pages();
-    for (const page of pages) {
-      if (page.file && page.file.tasks && page.file.tasks.values) {
-        tasks = tasks.concat(page.file.tasks.values);
-      }
+  if (!dataviewApi?.pages) return [];
+
+  const trimmed = source.trim();
+  try {
+    return Array.from(dataviewApi.pages(trimmed || undefined));
+  } catch (error) {
+    console.warn("[project-planner] Dataview rejected the task source", error);
+    new Notice(t("task_source.invalid", { source: trimmed }));
+    return null;
+  }
+}
+
+function getAllDataviewTasks(
+  app: App,
+  pages: DataviewPage[],
+  requiredTags: string[] = []
+): BaseTask[] {
+  let tasks: RawTask[] = [];
+  for (const page of pages) {
+    if (page.file && page.file.tasks && page.file.tasks.values) {
+      tasks = tasks.concat(page.file.tasks.values);
     }
   }
+
+  // Gate before parsing, not after. On a vault where real tasks share notes
+  // with shopping lists and meeting checklists, the cost being complained
+  // about is parsing thousands of irrelevant lines, so a filter applied later
+  // would not fix it.
+  tasks = gateTasksByTag(tasks, requiredTags);
+
   const factory = new TaskFactory();
   const parsedTasks = tasks.map((rawTask) => factory.parse(rawTask));
 
@@ -1484,7 +1539,14 @@ function withCompanionNoteProperties(app: App, task: BaseTask): BaseTask {
   return withNoteProperties(task, readTaskNoteProperties(frontmatter));
 }
 
-export function getNoteTasks(app: App): BaseTask[] {
+/**
+ * Notes tagged `task`, from the whole vault or — given `paths` — only from the
+ * notes a task source picked out.
+ */
+export function getNoteTasks(
+  app: App,
+  paths: Set<string> | null = null
+): BaseTask[] {
   const tasks: BaseTask[] = [];
   const vault = app.vault;
   const metadataCache = app.metadataCache;
@@ -1493,6 +1555,8 @@ export function getNoteTasks(app: App): BaseTask[] {
   const files = vault.getMarkdownFiles();
 
   for (const file of files) {
+    if (paths && !paths.has(file.path)) continue;
+
     // Get the file's metadata (frontmatter)
     const cache = metadataCache.getFileCache(file);
 

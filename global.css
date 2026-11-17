@@ -2922,6 +2922,34 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-on-accent);
 }
 
+/* A select among the scale buttons: same face, and keeps the theme's arrow,
+   so only the colour changes when it is the active scale */
+.project-planner-gantt-toolbar__group-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  border-right: 1px solid var(--background-modifier-border);
+}
+
+.project-planner-gantt-toolbar__window {
+  height: auto;
+  padding: 4px 24px 4px 10px;
+  border-left: 1px solid var(--background-modifier-border);
+  border-right: 1px solid var(--background-modifier-border);
+  background-color: var(--background-primary);
+}
+
+.project-planner-gantt-toolbar__window.project-planner-gantt-toolbar__scale--active {
+  background-color: var(--interactive-accent);
+}
+
+.project-planner-gantt-toolbar__window option {
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
 .project-planner-gantt-toolbar__button {
   display: inline-flex;
   align-items: center;
@@ -3054,6 +3082,13 @@ If your plugin does not need CSS, delete this file.
   height: 5px;
   border-radius: 2px;
   background: var(--text-muted);
+}
+
+.project-planner-gantt-legend__swatch--rollup {
+  height: 7px;
+  border-radius: 2px;
+  background: var(--color-blue, #2674b5);
+  opacity: 0.35;
 }
 
 .project-planner-gantt-legend__swatch--upstream {
@@ -3317,6 +3352,20 @@ If your plugin does not need CSS, delete this file.
   color: var(--text-on-accent);
   background: var(--interactive-accent);
   flex: 0 0 auto;
+}
+
+/* Calmer than the linking bar: a view the user chose, not a pending action */
+.project-planner-gantt-focus {
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.project-planner-gantt-focus__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .project-planner-gantt-linking__cancel {
@@ -3859,6 +3908,115 @@ If your plugin does not need CSS, delete this file.
   border-radius: 2px;
   background: var(--text-muted);
   cursor: default;
+}
+
+/* Compact density. Rows shrink through --gantt-row-height; these trim what
+   is sized in pixels so it still fits a 22px row. */
+.project-planner-gantt--compact .project-planner-gantt-bar {
+  top: 3px;
+  height: calc(var(--gantt-row-height) - 6px);
+  font-size: 10px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-bar--summary {
+  top: calc(var(--gantt-row-height) / 2 - 5px);
+  height: 4px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-bar--summary::before,
+.project-planner-gantt--compact .project-planner-gantt-bar--summary::after {
+  border-top-width: 4px;
+  border-left-width: 3px;
+  border-right-width: 3px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-rollup {
+  top: calc(var(--gantt-row-height) / 2 + 1px);
+  height: 5px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-rollup__item--point {
+  width: 5px;
+  margin-left: calc(var(--gantt-day-width) / 2 - 2.5px);
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label-text {
+  font-size: 12px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label .project-planner-tag {
+  margin-bottom: 0;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label .project-planner-link-button {
+  height: 18px;
+  padding: 0 4px;
+}
+
+/* The inside of a collapsed row, in the strip under its summary rail */
+.project-planner-gantt-rollup {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--gantt-row-height) / 2 + 3px);
+  height: 7px;
+  pointer-events: none;
+}
+
+.project-planner-gantt-rollup__item {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  left: calc(var(--bar-offset) * var(--gantt-day-width));
+  pointer-events: auto;
+  cursor: help;
+}
+
+/* Translucent, so parallel work stacks into a darker band */
+.project-planner-gantt-rollup__item--span {
+  width: calc(var(--bar-span) * var(--gantt-day-width));
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--color-blue, #2674b5);
+  opacity: 0.35;
+}
+
+.project-planner-gantt-rollup__item--span.project-planner-gantt-rollup__item--in_progress {
+  background: var(--color-orange, #e07c3a);
+}
+
+.project-planner-gantt-rollup__item--span.project-planner-gantt-rollup__item--done {
+  background: var(--color-green, #4caf62);
+}
+
+.project-planner-gantt-rollup__item--span.project-planner-gantt-rollup__item--canceled {
+  background: var(--text-faint);
+}
+
+/* A one-day task: centred on its day, and solid so it reads above the strips */
+.project-planner-gantt-rollup__item--point {
+  width: 7px;
+  margin-left: calc(var(--gantt-day-width) / 2 - 3.5px);
+  background: var(--color-purple, #8a5cf5);
+  transform: rotate(45deg);
+  z-index: 1;
+}
+
+.project-planner-gantt-rollup__item--point.project-planner-gantt-rollup__item--done {
+  background: var(--color-green, #4caf62);
+}
+
+.project-planner-gantt-rollup__item--at-risk {
+  background: var(--color-yellow, #d9a441);
+  opacity: 1;
+}
+
+.project-planner-gantt-rollup__item--span.project-planner-gantt-rollup__item--at-risk {
+  background: var(--color-yellow, #d9a441);
+  opacity: 0.8;
 }
 
 /* No room for a name in a 6px rail, and the label column already says it */

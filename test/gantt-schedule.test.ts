@@ -1,6 +1,7 @@
 import {
   DEFAULT_DURATION_DAYS,
   GanttTaskInput,
+  fillTimeline,
   getTimelineRange,
   isInferredBar,
   resizeBar,
@@ -440,5 +441,21 @@ describe("resizeBar with working days", () => {
       true
     );
     expect(resized).toEqual({ start: "2026-08-10", end: "2026-08-14" });
+  });
+});
+
+describe("fillTimeline", () => {
+  const range = { start: "2026-09-01", end: "2026-09-10" };
+
+  it("runs a short timeline on to the minimum length", () => {
+    expect(fillTimeline(range, 30)).toEqual({
+      start: "2026-09-01",
+      end: "2026-09-30",
+    });
+  });
+
+  it("leaves a timeline that is already long enough alone", () => {
+    expect(fillTimeline(range, 10)).toBe(range);
+    expect(fillTimeline(range, 0)).toBe(range);
   });
 });

@@ -6,6 +6,9 @@ plan when work happens rather than just how it connects.
 Open it from the **Gantt chart** ribbon icon, or with the **Open Gantt view**
 command.
 
+!!! tip
+    In a large vault, give each project its own chart: a [`project-planner-gantt` block](embedding.md#a-gantt-chart-in-a-note) in the project's note shows only that project's tasks.
+
 ## Every task gets a bar
 
 Most tasks in a real vault have no dates, and a chart that only drew dated
@@ -63,6 +66,36 @@ rows sort in on their own date alongside the tasks.
 Your own row order is untouched underneath: dragging is switched off while the
 mode is on, and turning it off puts the arrangement — and the nesting — back
 exactly as it was.
+
+### Collapsing
+
+A parent's chevron folds its children away. **Alt-click** it to fold or open
+the whole branch — the parent and every parent inside it — in one go.
+
+**Levels 1 2 3 … All** in the toolbar fold the chart to a depth: **1** shows
+only the top-level tasks, **2** adds their children, **All** opens everything.
+It is a one-off fold, not a mode, so rows you open by hand afterwards stay
+open. The buttons only appear when some task has children.
+
+A collapsed row still shows what it hides. Under its summary rail each task
+inside is drawn as a faint strip — parallel work stacks into a darker band, and
+a gap between phases shows as a gap — and each one-day task (a gate, a
+go-live) as a diamond, so it does not vanish at a coarse scale. A task that
+needs attention is drawn in yellow. Hover any of them for its name and dates.
+
+### Showing one branch
+
+The **focus** button on a parent row (it appears on hover) narrows the chart to
+that task, everything inside it and the parents above it. A bar above the chart
+names the branch; **Show all** brings the rest back. The focus lasts until you
+clear it or close the tab. Levels, search and **Hide completed** all work
+inside it.
+
+### Compact rows
+
+**Compact** in the toolbar draws rows at 22px instead of 34px: slimmer bars,
+smaller tags, the same information. A plan of a hundred-odd rows then takes
+about a third less height. The setting is remembered.
 
 ## Adding and linking tasks
 
@@ -127,13 +160,29 @@ another task, to move the highlight. The map does the same thing.
 
 | Control              | Purpose                                                     |
 | -------------------- | ------------------------------------------------------------ |
-| Days / Weeks / Months | Zoom level of the timeline                                  |
+| Days / Weeks / Months | Fixed zoom levels of the timeline                          |
+| Period (2–18 mo)     | Fits that many months across the chart                      |
+| Fit                  | Fits the whole plan across the chart                        |
 | Today                | Scrolls the timeline back to today                          |
 | Search               | Filters rows by task text or tag                            |
 | Hide completed       | Removes done and canceled tasks from the chart              |
+| Compact              | Slimmer rows, so more of the plan fits on screen            |
 | Apply suggested dates | Writes every dashed bar to its note                        |
 | Reload               | Re-reads tasks from the vault                               |
 | Task column divider  | Drag to widen the column for long task names                |
+
+### Scale
+
+**Days**, **Weeks** and **Months** draw a day at a fixed width, so a long plan
+scrolls sideways. For a plan that runs for years, pick a **period** instead:
+2, 3, 4, 6, 12 or 18 months fill the width of the chart, whatever its size.
+**Fit** fits the whole plan, first task to last. Periods and Fit follow the
+window as it is resized.
+
+The header follows the width of a day: day numbers when zoomed in, weeks under
+months, then months under quarters, then quarters under years. Changing the
+scale keeps the date in the middle of the view where it was. The Gantt tab
+remembers its scale.
 
 Task names render `[[wikilinks]]` as real links, so a task whose text is a
 link opens that note when clicked.

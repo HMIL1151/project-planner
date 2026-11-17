@@ -12,6 +12,7 @@ import type { RawTask } from "src/types/task";
  */
 
 export interface DataviewPageFile {
+  path?: string;
   tasks?: { values?: RawTask[] };
 }
 
