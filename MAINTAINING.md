@@ -120,14 +120,17 @@ Not every finding is yours to fix:
   `manifest.json` declares and you get it. 1.1.0 earned one by implementing
   `getSettingDefinitions()` (1.13) while declaring 1.8.0. Either raise
   `minAppVersion` or do not use the API.
-- **Mine, deliberate, and staying.** `activeDocument.createElement` and
-  `embed.ownerDocument.createElement` in five places trip
-  `prefer-create-el`. They are correct: `activeDocument` follows the focused
-  popout window, and the global `createEl` would build the element in the main
-  document, which breaks the Gantt PNG export and the handover pack from a
-  popped-out view. Say so rather than "that is not my code" — a case-sensitive
-  grep for `document.createElement` misses both spellings and makes it look
-  like a dependency's problem.
+- **Check "deliberate" before defending it.** `prefer-create-el` flagged five
+  `createElement` calls and the answer given twice was that all five needed
+  `activeDocument`, which follows the focused popout window. Reading them, none
+  did. Three never attached the element at all, and the other two are
+  serialised out as `container.innerHTML`, so in every case the owning document
+  was unobservable. Two useful habits out of it: grep case-insensitively, or
+  `activeDocument.createElement` and `ownerDocument.createElement` both hide
+  from a search for `document.createElement` and it looks like a dependency's
+  problem; and if the global `createEl` ever reports _'createEl' is not
+  defined_, it is `eslint.config.mjs` missing the Obsidian globals, not the
+  wrong API.
 - **Informational.** Vault enumeration and clipboard access are disclosures of
   what the plugin legitimately does. It has to see every file to find your
   tasks, and the Gantt export puts an image on the clipboard.
