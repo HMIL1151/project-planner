@@ -48,7 +48,7 @@ Obsidian uses `versions.json` (read from the repository root on `main`) to check
 }
 ```
 
-If a user's Obsidian version is older than the `minAppVersion` declared for the latest release, Obsidian will not offer the update. The bump script appends each new version to this file automatically (currently hardcoded to `minAppVersion: 1.8.0`).
+If a user's Obsidian version is older than the `minAppVersion` declared for the latest release, Obsidian will not offer the update. The bump script appends each new version to this file automatically, reading the value from `manifest.json` so the two can never disagree — a stale value here would offer an incompatible build to someone on an older app.
 
 #### The Role of `manifest.json`
 

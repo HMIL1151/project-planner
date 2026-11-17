@@ -53,7 +53,7 @@ exactly the same.
 
 ## Why this exists
 
-Most task plugins are good at *capture* and weak at *planning*. They will tell
+Most task plugins are good at _capture_ and weak at _planning_. They will tell
 you what is due on Thursday. They will not tell you which of the eleven things
 due on Thursday is the one that, if it slips, moves your delivery date.
 
@@ -75,13 +75,17 @@ Project Planner is built around dependencies rather than dates:
 
 ## Requirements
 
-| Plugin | Required? | Why |
-| --- | --- | --- |
-| [Dataview](https://github.com/blacksmithgu/obsidian-dataview) | **Yes** | Reads inline `- [ ]` checkbox tasks out of your vault. The views refuse to render without it. |
-| [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) | Optional | Adds **Create task** and **Edit task** to the node context menu, using the Tasks plugin's own modal. |
+| Plugin                                                          | Required? | Why                                                                                                  |
+| --------------------------------------------------------------- | --------- | ---------------------------------------------------------------------------------------------------- |
+| [Dataview](https://github.com/blacksmithgu/obsidian-dataview)   | **Yes**   | Reads inline `- [ ]` checkbox tasks out of your vault. The views refuse to render without it.        |
+| [Tasks](https://github.com/obsidian-tasks-group/obsidian-tasks) | Optional  | Adds **Create task** and **Edit task** to the node context menu, using the Tasks plugin's own modal. |
 
-Obsidian **1.8.0** or newer. Works on desktop and mobile — no Node or Electron
-APIs are used.
+Obsidian **1.13.0** or newer. Works on desktop and mobile — no Node or
+Electron APIs are used.
+
+1.13 is required because the settings tab is built from Obsidian's declarative
+settings API, which is what makes these settings findable from the settings
+search. Releases up to 1.1.0 run on Obsidian 1.8.
 
 ---
 
@@ -159,7 +163,7 @@ reads whichever a line already uses and **writes back in the same style**, so
 it never reformats notes into a house style you did not choose.
 
 ```markdown
-- [ ] Emoji style  🆔 a1 ⛔ b2 📅 2026-03-06
+- [ ] Emoji style 🆔 a1 ⛔ b2 📅 2026-03-06
 - [ ] Dataview style [id:: a1] [dependsOn:: b2] [due:: 2026-03-06]
 ```
 
@@ -175,13 +179,13 @@ The dependency graph, on a pannable ReactFlow canvas with automatic
 Each task is a node showing its text, status, tags, priority and progress.
 Node controls:
 
-| Control | Action |
-| --- | --- |
-| Status circle | Cycle the task's completion status |
-| Star | Star or unstar the task (`⭐`) |
-| Arrow | Open the note the task lives in |
-| **⋮** | Context menu — create a child task, edit, set finance, delete |
-| Tag chips | Click **×** to remove a tag, **+ Add tag** to add one |
+| Control       | Action                                                        |
+| ------------- | ------------------------------------------------------------- |
+| Status circle | Cycle the task's completion status                            |
+| Star          | Star or unstar the task (`⭐`)                                |
+| Arrow         | Open the note the task lives in                               |
+| **⋮**         | Context menu — create a child task, edit, set finance, delete |
+| Tag chips     | Click **×** to remove a tag, **+ Add tag** to add one         |
 
 Wiki-links in task text render as real links and open the note they point at.
 
@@ -210,15 +214,15 @@ about when a deadline is at risk; everything else has room to move.
 
 The right-hand filter panel carries:
 
-| Filter | Description |
-| --- | --- |
-| Search | By task text, ID or tag, with a live suggestion list (`↑`/`↓`/`Enter`/`Escape`) |
-| Show dependencies / dependents | Pull the upstream and/or downstream chain of a search hit into view |
-| Status | Multi-select — to do, in progress, done, cancelled |
-| Include labels | Show only tasks carrying at least one selected tag |
-| Exclude labels | Hide tasks carrying any selected tag |
-| Files / folders | Restrict to selected notes or folders |
-| Only starred | Show only starred tasks |
+| Filter                         | Description                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| Search                         | By task text, ID or tag, with a live suggestion list (`↑`/`↓`/`Enter`/`Escape`) |
+| Show dependencies / dependents | Pull the upstream and/or downstream chain of a search hit into view             |
+| Status                         | Multi-select — to do, in progress, done, cancelled                              |
+| Include labels                 | Show only tasks carrying at least one selected tag                              |
+| Exclude labels                 | Hide tasks carrying any selected tag                                            |
+| Files / folders                | Restrict to selected notes or folders                                           |
+| Only starred                   | Show only starred tasks                                                         |
 
 **Filter presets** save any combination by name, restore it in one click, and
 can be inserted straight into a note as an embed block.
@@ -246,12 +250,12 @@ The same tasks on a timeline.
 A chart that only drew dated tasks would be nearly empty in a real vault, so
 every task is placed:
 
-| The task has | The bar is |
-| --- | --- |
-| Start (`🛫`, or `⏳` as fallback) and due (`📅`) | Drawn between them |
-| Start only | One day long |
-| Due only | Drawn from when its blockers finish up to the deadline — the window available |
-| Neither | Starts the day after its last blocker finishes, lasts one day |
+| The task has                                     | The bar is                                                                    |
+| ------------------------------------------------ | ----------------------------------------------------------------------------- |
+| Start (`🛫`, or `⏳` as fallback) and due (`📅`) | Drawn between them                                                            |
+| Start only                                       | One day long                                                                  |
+| Due only                                         | Drawn from when its blockers finish up to the deadline — the window available |
+| Neither                                          | Starts the day after its last blocker finishes, lasts one day                 |
 
 Because inference walks the dependency graph, a chain of undated tasks spreads
 out day by day in the order the graph says they must happen.
@@ -265,14 +269,14 @@ at once and get a count of what changed.
 
 ### Editing
 
-| Action | Result |
-| --- | --- |
-| Drag a bar sideways | Moves start and due together, keeping the length |
-| Drag either edge | Changes that date alone |
-| Click a task name | Selects the row and lights up its whole dependency chain |
-| Drag the grip | Reorders rows; the order is saved |
-| **+** on a row | Writes a new task directly below it, in the same note |
-| **Link** on a row | Starts a dependency — click the task it should block |
+| Action              | Result                                                   |
+| ------------------- | -------------------------------------------------------- |
+| Drag a bar sideways | Moves start and due together, keeping the length         |
+| Drag either edge    | Changes that date alone                                  |
+| Click a task name   | Selects the row and lights up its whole dependency chain |
+| Drag the grip       | Reorders rows; the order is saved                        |
+| **+** on a row      | Writes a new task directly below it, in the same note    |
+| **Link** on a row   | Starts a dependency — click the task it should block     |
 
 Dragging snaps to whole days and a bar can never be shorter than one day.
 
@@ -281,7 +285,7 @@ Dragging snaps to whole days and a bar can never be shorter than one day.
 - **Working days** — measure durations in working days and keep bars off
   weekends. The finance view follows the same setting, so money and schedule
   can never disagree.
-- **Sort by date** — a *mode*, not a one-off shuffle: rows are drawn flat and
+- **Sort by date** — a _mode_, not a one-off shuffle: rows are drawn flat and
   earliest first while it is on, and your manual order and nesting come back
   untouched when you turn it off.
 - **Group by** — tag, status, note or project.
@@ -307,11 +311,11 @@ ones purple. The timeline always stretches far enough to reach them.
 Three ways a plan quietly goes wrong, flagged on the rows and counted under the
 chart:
 
-| Warning | Meaning |
-| --- | --- |
-| **Overdue** | Finished on paper before today, and not marked done |
-| **Stalled** | Should have started, and has not been touched |
-| **Backwards dependency** | A blocker finishes *after* the work waiting on it |
+| Warning                  | Meaning                                             |
+| ------------------------ | --------------------------------------------------- |
+| **Overdue**              | Finished on paper before today, and not marked done |
+| **Stalled**              | Should have started, and has not been touched       |
+| **Backwards dependency** | A blocker finishes _after_ the work waiting on it   |
 
 Only dates you actually wrote are judged — flagging the chart's own guesses
 would be noise.
@@ -331,18 +335,18 @@ is marked only when today falls inside the plan.
 
 ## The board view
 
-Where the Gantt answers *when*, the board answers *what state is this in* — and
+Where the Gantt answers _when_, the board answers _what state is this in_ — and
 dragging a card is what changes the answer.
 
-| Group by | Columns | Dragging writes |
-| --- | --- | --- |
-| Status | To do, In progress, Done, Cancelled | The checkbox |
+| Group by | Columns                                                             | Dragging writes   |
+| -------- | ------------------------------------------------------------------- | ----------------- |
+| Status   | To do, In progress, Done, Cancelled                                 | The checkbox      |
 | Due date | Late, Today, Tomorrow, Rest of this week, Next week, Later, No date | The `📅` due date |
-| Person | One per name in `[people:: …]`, plus Unassigned | The task's people |
-| Tag | One per tag in use, plus No tag | The task's tags |
-| Project | One per project | *read only* |
-| Priority | 🔺 ⏫ 🔼 🔽 ⏬, plus No priority | *read only* |
-| Note | One per note holding tasks | *read only* |
+| Person   | One per name in `[people:: …]`, plus Unassigned                     | The task's people |
+| Tag      | One per tag in use, plus No tag                                     | The task's tags   |
+| Project  | One per project                                                     | _read only_       |
+| Priority | 🔺 ⏫ 🔼 🔽 ⏬, plus No priority                                    | _read only_       |
+| Note     | One per note holding tasks                                          | _read only_       |
 
 Dropping a card into a date column writes a real due date, so the card stays
 where you put it. Dropping one into a person's column makes it theirs alone;
@@ -373,10 +377,10 @@ Rates live in a note you own, not in plugin settings, so you can link to them
 and keep them in version control. Default path `Finance/People and rates.md`.
 
 ```markdown
-| Grade      | Rate |
-| ---------- | ---- |
-| Principal  | 145  |
-| Senior     | 110  |
+| Grade     | Rate |
+| --------- | ---- |
+| Principal | 145  |
+| Senior    | 110  |
 
 | Person      | Grade     | Rate |
 | ----------- | --------- | ---- |
@@ -395,12 +399,12 @@ dropped and reported with their line number.
 - [ ] Fit the loom [hoursPerDay:: 6] [people:: Alice Smith 60%, Bob Jones 40%] [costs:: Loom kit 240, Travel 85]
 ```
 
-| Field | Meaning |
-| --- | --- |
-| `hours` | Explicit total hours — wins over everything |
-| `hoursPerDay` | Per-task override of the global default |
-| `people` | Who is on it, and their share |
-| `costs` | Materials and expenses |
+| Field         | Meaning                                     |
+| ------------- | ------------------------------------------- |
+| `hours`       | Explicit total hours — wins over everything |
+| `hoursPerDay` | Per-task override of the global default     |
+| `people`      | Who is on it, and their share               |
+| `costs`       | Materials and expenses                      |
 
 Synonyms are accepted (`totalHours`/`estimatedHours` → `hours`,
 `allocations`/`who` → `people`, `expenses`/`materials` → `costs`), and shares
@@ -419,7 +423,7 @@ Name matching is on meaning, not typing — `Alice Smith`, `alice  smith` and
   unpriced rather than counted as free.
 - Shares that do not total 100% are used **exactly as written** — scaling
   60% + 30% up to 100% would hide a typo and inflate the plan.
-- Cost resting on *suggested* dates is counted separately, and
+- Cost resting on _suggested_ dates is counted separately, and
   **Include suggested dates** leaves it out. A vault full of undated tasks will
   never quietly read as a large invented cost.
 
@@ -500,23 +504,23 @@ write fails.
 Everything Project Planner reads and writes. Every emoji field has a Dataview
 equivalent in `[field:: value]` or `(field:: value)` form.
 
-| Concept | Emoji | Dataview | Note-task frontmatter |
-| --- | --- | --- | --- |
-| Task ID | `🆔 abc` | `[id:: abc]` | — (the note is the identity) |
-| Blocked by | `⛔ abc` or `⛔ a,b,c` | `[dependsOn:: abc]` | `blockedBy:` / `dependsOn:` |
-| Due date | `📅 2026-03-06` | `[due:: 2026-03-06]` | `due:` |
-| Start date | `🛫 2026-03-02` | `[start:: 2026-03-02]` | `start:` |
-| Scheduled | `⏳ 2026-03-02` | `[scheduled:: …]` | `scheduled:` |
-| Created / done / cancelled | `➕` `✅` `❌` | — | — |
-| Priority | `🔺 ⏫ 🔼 🔽 ⏬` | — | — |
-| Starred | `⭐` | — | — |
-| Progress | — | `[progress:: 40]` or `40%` | `progress:` |
-| Parent | — | `[parent:: abc]` | `parent:` |
-| Tags | `#tag` | — | `tags:` |
-| Hours | — | `[hours:: 12]` | `hours:` |
-| Hours per day | — | `[hoursPerDay:: 6]` | `hoursPerDay:` |
-| People | — | `[people:: Alice 60%, Bob 40%]` | `people:` |
-| Costs | — | `[costs:: Loom kit 240]` | `costs:` |
+| Concept                    | Emoji                  | Dataview                        | Note-task frontmatter        |
+| -------------------------- | ---------------------- | ------------------------------- | ---------------------------- |
+| Task ID                    | `🆔 abc`               | `[id:: abc]`                    | — (the note is the identity) |
+| Blocked by                 | `⛔ abc` or `⛔ a,b,c` | `[dependsOn:: abc]`             | `blockedBy:` / `dependsOn:`  |
+| Due date                   | `📅 2026-03-06`        | `[due:: 2026-03-06]`            | `due:`                       |
+| Start date                 | `🛫 2026-03-02`        | `[start:: 2026-03-02]`          | `start:`                     |
+| Scheduled                  | `⏳ 2026-03-02`        | `[scheduled:: …]`               | `scheduled:`                 |
+| Created / done / cancelled | `➕` `✅` `❌`         | —                               | —                            |
+| Priority                   | `🔺 ⏫ 🔼 🔽 ⏬`       | —                               | —                            |
+| Starred                    | `⭐`                   | —                               | —                            |
+| Progress                   | —                      | `[progress:: 40]` or `40%`      | `progress:`                  |
+| Parent                     | —                      | `[parent:: abc]`                | `parent:`                    |
+| Tags                       | `#tag`                 | —                               | `tags:`                      |
+| Hours                      | —                      | `[hours:: 12]`                  | `hours:`                     |
+| Hours per day              | —                      | `[hoursPerDay:: 6]`             | `hoursPerDay:`               |
+| People                     | —                      | `[people:: Alice 60%, Bob 40%]` | `people:`                    |
+| Costs                      | —                      | `[costs:: Loom kit 240]`        | `costs:`                     |
 
 Out-of-range progress is clamped rather than rejected — someone who typed 120
 meant "finished". Progress above zero displays as in-progress whatever the
@@ -528,15 +532,15 @@ make.
 
 ## Commands
 
-| Command | Description |
-| --- | --- |
-| Open graph view | The dependency graph |
-| Open Gantt view | The timeline |
-| Open board view | The kanban board |
-| Open task finance | The finance dashboard *(when finance is enabled)* |
-| Create the rates note | Creates and opens the rates note *(when finance is enabled)* |
-| Create notes for existing tasks | Retrofit companion notes across the vault |
-| Insert current filter as embedded graph | Write an embed block into a note |
+| Command                                 | Description                                                  |
+| --------------------------------------- | ------------------------------------------------------------ |
+| Open graph view                         | The dependency graph                                         |
+| Open Gantt view                         | The timeline                                                 |
+| Open board view                         | The kanban board                                             |
+| Open task finance                       | The finance dashboard _(when finance is enabled)_            |
+| Create the rates note                   | Creates and opens the rates note _(when finance is enabled)_ |
+| Create notes for existing tasks         | Retrofit companion notes across the vault                    |
+| Insert current filter as embedded graph | Write an embed block into a note                             |
 
 Ribbon icons are provided for the graph, Gantt, board and — when enabled —
 finance views.
@@ -545,18 +549,18 @@ finance views.
 
 ## Settings
 
-| Group | Settings |
-| --- | --- |
-| **Display** | Show priorities, show tags, show status counts |
-| **Layout** | Direction (horizontal/vertical), edge style (Bezier/Straight/SmoothStep), SmoothStep corner radius |
-| **Tag appearance** | Palette (Rainbow, Ocean, Forest, Sunset, Mono) plus per-tag colour pinning, with **Reset all** |
-| **Task relations** | How dependencies are written: CSV, individual, or Dataview |
-| **Gantt** | Working days, critical path, schedule warnings, scale, compact rows, row order and collapsed rows |
-| **Board** | Group-by, card order, collapsed columns |
-| **Finance** | Enable, rates note path, default hours per day, currency, include suggested dates |
-| **Companion notes** | Enable, and the folder to write them to |
-| **Language** | English, Nederlands, 简体中文 |
-| **Advanced** | Debug visualisation overlays |
+| Group               | Settings                                                                                           |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| **Display**         | Show priorities, show tags, show status counts                                                     |
+| **Layout**          | Direction (horizontal/vertical), edge style (Bezier/Straight/SmoothStep), SmoothStep corner radius |
+| **Tag appearance**  | Palette (Rainbow, Ocean, Forest, Sunset, Mono) plus per-tag colour pinning, with **Reset all**     |
+| **Task relations**  | How dependencies are written: CSV, individual, or Dataview                                         |
+| **Gantt**           | Working days, critical path, schedule warnings, scale, compact rows, row order and collapsed rows  |
+| **Board**           | Group-by, card order, collapsed columns                                                            |
+| **Finance**         | Enable, rates note path, default hours per day, currency, include suggested dates                  |
+| **Companion notes** | Enable, and the folder to write them to                                                            |
+| **Language**        | English, Nederlands, 简体中文                                                                      |
+| **Advanced**        | Debug visualisation overlays                                                                       |
 
 ---
 
@@ -605,15 +609,15 @@ npm install
 npm run dev
 ```
 
-| Command | Purpose |
-| --- | --- |
-| `npm run dev` | esbuild watch build |
-| `npm run build` | Typecheck + production bundle |
+| Command                | Purpose                             |
+| ---------------------- | ----------------------------------- |
+| `npm run dev`          | esbuild watch build                 |
+| `npm run build`        | Typecheck + production bundle       |
 | `npm run build:deploy` | Build, then copy into a local vault |
-| `npm test` | Jest |
-| `npm run lint` | ESLint over `src/**/*.{ts,tsx}` |
-| `npm run lint:css` | Stylelint |
-| `npm run format` | Prettier check |
+| `npm test`             | Jest                                |
+| `npm run lint`         | ESLint over `src/**/*.{ts,tsx}`     |
+| `npm run lint:css`     | Stylelint                           |
+| `npm run format`       | Prettier check                      |
 
 `src/lib/` is pure, framework-free logic — scheduling, critical path, finance,
 costing, Gantt rows, filtering and graph traversal — and is where the unit

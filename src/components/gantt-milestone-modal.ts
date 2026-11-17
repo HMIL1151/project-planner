@@ -123,7 +123,7 @@ export class GanttMilestoneModal extends Modal {
       buttons.addButton((button) =>
         button
           .setButtonText(t("gantt.milestone_modal_delete"))
-          .setWarning()
+          .setDestructive()
           .onClick(() => {
             this.resolved = true;
             this.resolve({ action: "delete" });

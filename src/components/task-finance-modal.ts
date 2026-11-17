@@ -383,7 +383,7 @@ export class TaskFinanceModal extends Modal {
       buttons.addButton((button) =>
         button
           .setButtonText(t("finance.modal_clear"))
-          .setWarning()
+          .setDestructive()
           .onClick(() => {
             this.resolved = true;
             this.resolve({ action: "clear" });

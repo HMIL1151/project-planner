@@ -6,6 +6,23 @@ import re
 import tomllib
 
 
+def read_min_app_version(manifest_path="manifest.json"):
+    """The minAppVersion the plugin currently declares."""
+    try:
+        with open(manifest_path, "r") as f:
+            manifest = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        print(f"Error: cannot read minAppVersion from {manifest_path}")
+        sys.exit(1)
+
+    min_app_version = manifest.get("minAppVersion")
+    if not min_app_version:
+        print(f"Error: {manifest_path} declares no minAppVersion")
+        sys.exit(1)
+
+    return min_app_version
+
+
 def update_json_file(file_path, new_version, mode, key=None):
     """Update version in a JSON file"""
     try:
@@ -24,9 +41,12 @@ def update_json_file(file_path, new_version, mode, key=None):
         else:
             print(f"Warning: key '{key}' not found in {file_path}")
     elif mode == "append":
-        # For versions.json, we update both the latest version and append to the list
+        # versions.json maps each plugin version to the minimum Obsidian it
+        # needs. Obsidian reads it to decide whether to offer someone the
+        # update, so a hardcoded value here would offer an incompatible build
+        # to anyone on an older app and break the plugin for them.
         if file_path.endswith("versions.json"):
-            data[new_version] = "1.8.0"  # TODO: Make this dynamic
+            data[new_version] = read_min_app_version()
 
     with open(file_path, "w") as f:
         json.dump(data, f, indent=4)

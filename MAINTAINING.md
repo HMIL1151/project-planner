@@ -10,7 +10,7 @@ Twenty minutes, every week or two, in this order:
 1. **New issues** — label each one and reply, even if the reply is "I have read
    this, it is a good idea, I am not starting it yet". An unanswered issue is
    the only thing here that actually costs anything: the community plugin
-   scorecard scores *Responsiveness* on the share of issues closed, and people
+   scorecard scores _Responsiveness_ on the share of issues closed, and people
    stop reporting things when nobody answers.
 2. **New PRs** — approve the CI run (see below), then read the diff.
 3. **Renovate PRs** — minor and patch updates automerge themselves. Majors
@@ -25,12 +25,12 @@ are the GitHub defaults (`bug`, `enhancement`, `question`, `documentation`,
 `good first issue`, `help wanted`, `duplicate`, `wontfix`), and four outcomes
 cover almost everything:
 
-| Outcome | What it looks like |
-| --- | --- |
-| **Fix it** | Reproducible bug. Label `bug`, fix, close by merging. |
-| **Plan it** | Real need, not this week. Label `enhancement`, say so plainly, leave it open. |
-| **Answer it** | It already works, or it is a docs gap. Label `question` or `documentation`, answer, close. A docs gap is a real bug — fix the page before closing. |
-| **Decline it** | Needs a database, a second data format, or a dependency you do not want. Label `wontfix`, say why in two sentences, close. |
+| Outcome        | What it looks like                                                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Fix it**     | Reproducible bug. Label `bug`, fix, close by merging.                                                                                              |
+| **Plan it**    | Real need, not this week. Label `enhancement`, say so plainly, leave it open.                                                                      |
+| **Answer it**  | It already works, or it is a docs gap. Label `question` or `documentation`, answer, close. A docs gap is a real bug — fix the page before closing. |
+| **Decline it** | Needs a database, a second data format, or a dependency you do not want. Label `wontfix`, say why in two sentences, close.                         |
 
 Declining is not rude; leaving someone guessing for a month is. A feature
 request closed with a reason can always be reopened.
@@ -55,8 +55,8 @@ dead. Close the pull request and immediately reopen it; that fires the
 `pull_request` workflows again, and this time approve them.
 
 To stop the gate applying to a contributor who has already proved themselves,
-Settings → Actions → General → *Fork pull request workflows from outside
-collaborators* can be set to require approval only for first-time
+Settings → Actions → General → _Fork pull request workflows from outside
+collaborators_ can be set to require approval only for first-time
 contributors.
 
 ### Stacked pull requests
@@ -71,7 +71,7 @@ same code three times and still miss something.
 
 ### Reading a diff you did not write
 
-The checks CI runs do not tell you whether code is *right*, only that it is
+The checks CI runs do not tell you whether code is _right_, only that it is
 clean. For a feature PR the questions worth actually answering are:
 
 - **Does it change what the vault holds?** A new frontmatter key or inline
@@ -103,49 +103,68 @@ maintain alone, but I would take the smaller half" is a legitimate review.
 
 ## The community plugin scorecard
 
-<https://community.obsidian.md/plugins/project-planner#scorecard> grades
-Health and Review. Not every finding is yours to fix, and it is worth knowing
-which is which before promising anything:
+<https://community.obsidian.md/plugins/project-planner#scorecard> grades Health
+and Review. The thing to know before promising anything is that **it grades the
+last released build, not `main`** — anything fixed after a release reads as
+unfixed until you ship again. That is what the attestation finding turned out
+to be.
 
-- **Actionable.** A missing contributing guide (this file's neighbour fixes
-  it), unanswered issues, missing artifact attestations on release assets,
-  `PluginSettingTab` not implementing `getSettingDefinitions()` so the
-  settings do not appear in Obsidian's settings search on 1.13+, and
-  ReactFlow's deprecated `parentNode` node property.
-- **Not yours.** `document.createElement` warnings come from the bundled
-  React runtime, not from `src/` — there are zero occurrences in this
-  codebase. "Malware scan not available" is the scanner's own state.
+Not every finding is yours to fix:
+
+- **Actionable, and usually a deprecation.** As of 1.3.0 the list is clear:
+  the contributing guide exists, issues get answered, `getSettingDefinitions()`
+  is implemented, `parentNode` is `parentId`, and `setWarning` is
+  `setDestructive`. Expect new ones as Obsidian moves.
+- **Watch the API-vs-`minAppVersion` error.** It is the most severe thing the
+  scanner reports and it is easy to cause: use an API newer than
+  `manifest.json` declares and you get it. 1.1.0 earned one by implementing
+  `getSettingDefinitions()` (1.13) while declaring 1.8.0. Either raise
+  `minAppVersion` or do not use the API.
+- **Mine, deliberate, and staying.** `activeDocument.createElement` and
+  `embed.ownerDocument.createElement` in five places trip
+  `prefer-create-el`. They are correct: `activeDocument` follows the focused
+  popout window, and the global `createEl` would build the element in the main
+  document, which breaks the Gantt PNG export and the handover pack from a
+  popped-out view. Say so rather than "that is not my code" — a case-sensitive
+  grep for `document.createElement` misses both spellings and makes it look
+  like a dependency's problem.
 - **Informational.** Vault enumeration and clipboard access are disclosures of
-  what the plugin legitimately does, not defects.
+  what the plugin legitimately does. It has to see every file to find your
+  tasks, and the Gantt export puts an image on the clipboard.
 
 ## Known gaps
 
-Current as of 2026-11-16; delete each line as it is dealt with.
-
-- **`npm run format` always fails locally on Windows, and always passes in
-  CI.** There is no `.gitattributes`, `core.autocrlf` is `true`, and
-  `.prettierrc.json` sets `"endOfLine": "lf"` — so every file Git rewrites on
-  a checkout comes back with CRLF and Prettier flags it. `npx prettier --check
-  --end-of-line auto "src/**"` is the honest local check. Fix properly with a
-  `.gitattributes` holding `* text=auto eol=lf` plus a one-off
-  `git add --renormalize .`, which also spares contributors on Windows.
-- **The emoji labels `.github/labeler.yaml` writes do not exist in this
-  repository.** Labels are not copied when a repository is forked, so the PR
-  Labeler job has nothing to apply. Either create the nine labels or simplify
-  the config.
-- **🚚 Release triggers on `pull_request`.** Its `release` job is correctly
-  gated to `push`, so the run does nothing useful on a PR but still shows up
-  as a required-looking check that fails behind the approval gate. Worth
-  narrowing the trigger.
-- **Release assets carry no attestation the scanner can find.** The workflow
-  does run `actions/attest`, so this is a question of which predicate and
-  which action (`actions/attest-build-provenance`) the scanner looks for.
+Current as of 2026-11-17; delete each line as it is dealt with.
 
 - **The release workflow only works on a commit that came from a pull
-  request.** `🚚 Release`'s *Determine version* job runs `semVersie`, which
+  request.** `🚚 Release`'s _Determine version_ job runs `semVersie`, which
   reads the version bump off the **pull request title**, not the commit
   message. Push straight to `main` and it retries four times looking for an
-  associated PR, then fails with *Could not find pull request in context* — no
+  associated PR, then fails with _Could not find pull request in context_ — no
   release is cut, but `main` carries a red run. So merge through a PR even when
   you are the only reviewer, and put the `feat:`/`fix:`/`docs:` prefix in the
   **PR title**.
+- **The invalid-source `Notice` fires once per view per load**, so a typo in
+  _Task source_ shows up four times over with every view open.
+
+## Things that bit once and are fixed
+
+Kept because the cause is not obvious and a fork can reintroduce any of them.
+
+- **Fork PR CI needs your approval, and the approval expires.** See above. It
+  cost this repository three runs and made a good contributor's work look
+  broken for a month.
+- **A fork does not inherit repository settings.** Not labels, not GitHub
+  Pages, not `CODEOWNERS` ownership. `.github/CODEOWNERS` still read
+  `* @NicoKNL` — the upstream author — so every review request went to someone
+  with no connection to this repo. Pages was never enabled, so the docs site
+  404'd and every link to it from `CONTRIBUTING.md` was dead while the deploy
+  job failed on every release. `actions/labeler` does create its own labels,
+  but grey and undescribed.
+- **Line endings.** `.gitattributes` with `eol=lf` now pins both ends. Before
+  it, `core.autocrlf` plus Prettier's `endOfLine: "lf"` meant `npm run format`
+  failed locally on files nobody had touched and passed in CI.
+- **Merging a fork PR locally still gives the contributor credit**, as long as
+  you use a merge commit. A squash creates a new SHA, GitHub cannot match it,
+  and their PR shows as _closed_ rather than _merged_ — which looks like
+  rejection on their profile.
