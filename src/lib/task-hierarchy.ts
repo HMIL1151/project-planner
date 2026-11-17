@@ -471,3 +471,24 @@ export function toggleBranchCollapsed(
 
   return collapsedIds.includes(taskId) ? rest : [...rest, ...branch];
 }
+
+/**
+ * The tasks a chart focused on one branch keeps: the task, everything nested
+ * under it, and the parents above it. The parents stay so the branch is still
+ * drawn where it sits in the plan, under the headings the user knows it by.
+ * Safe on a map with a loop in it.
+ */
+export function branchTaskIds(
+  parentById: ReadonlyMap<string, string | null>,
+  taskId: string
+): Set<string> {
+  const ids = collectDescendantIds(parentById, taskId);
+  let current: string | null = taskId;
+
+  while (current !== null && !ids.has(current)) {
+    ids.add(current);
+    current = parentById.get(current) ?? null;
+  }
+
+  return ids;
+}

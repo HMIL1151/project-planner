@@ -83,6 +83,20 @@ a gap between phases shows as a gap — and each one-day task (a gate, a
 go-live) as a diamond, so it does not vanish at a coarse scale. A task that
 needs attention is drawn in yellow. Hover any of them for its name and dates.
 
+### Showing one branch
+
+The **focus** button on a parent row (it appears on hover) narrows the chart to
+that task, everything inside it and the parents above it. A bar above the chart
+names the branch; **Show all** brings the rest back. The focus lasts until you
+clear it or close the tab. Levels, search and **Hide completed** all work
+inside it.
+
+### Compact rows
+
+**Compact** in the toolbar draws rows at 22px instead of 34px: slimmer bars,
+smaller tags, the same information. A plan of a hundred-odd rows then takes
+about a third less height. The setting is remembered.
+
 ## Adding and linking tasks
 
 | Control                    | What it does                                                |
@@ -152,6 +166,7 @@ another task, to move the highlight. The map does the same thing.
 | Today                | Scrolls the timeline back to today                          |
 | Search               | Filters rows by task text or tag                            |
 | Hide completed       | Removes done and canceled tasks from the chart              |
+| Compact              | Slimmer rows, so more of the plan fits on screen            |
 | Apply suggested dates | Writes every dashed bar to its note                        |
 | Reload               | Re-reads tasks from the vault                               |
 | Task column divider  | Drag to widen the column for long task names                |

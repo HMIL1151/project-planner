@@ -52,6 +52,8 @@ interface GanttToolbarProps {
   onHideCompletedChange: (_hide: boolean) => void;
   skipWeekends: boolean;
   onSkipWeekendsChange: (_skip: boolean) => void;
+  compactRows: boolean;
+  onCompactRowsChange: (_compact: boolean) => void;
   showCriticalPath: boolean;
   onShowCriticalPathChange: (_show: boolean) => void;
   taskCount: number;
@@ -87,6 +89,8 @@ export function GanttToolbar({
   onHideCompletedChange,
   skipWeekends,
   onSkipWeekendsChange,
+  compactRows,
+  onCompactRowsChange,
   showCriticalPath,
   onShowCriticalPathChange,
   taskCount,
@@ -293,6 +297,18 @@ export function GanttToolbar({
           onChange={(event) => onSkipWeekendsChange(event.target.checked)}
         />
         <span>{t("gantt.skip_weekends")}</span>
+      </label>
+
+      <label
+        className="project-planner-gantt-toolbar__toggle"
+        title={t("gantt.compact_rows_desc")}
+      >
+        <input
+          type="checkbox"
+          checked={compactRows}
+          onChange={(event) => onCompactRowsChange(event.target.checked)}
+        />
+        <span>{t("gantt.compact_rows")}</span>
       </label>
 
       <label

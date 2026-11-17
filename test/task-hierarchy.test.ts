@@ -1,6 +1,7 @@
 import { NoteTask } from "../src/types/note-task";
 import { GanttRow } from "../src/lib/gantt-rows";
 import {
+  branchTaskIds,
   buildFlatHierarchy,
   buildHierarchy,
   buildHierarchyTree,
@@ -603,5 +604,44 @@ describe("folding a stream away", () => {
     expect(folded.sort()).toEqual(["core", "ws1", "ws2"]);
 
     expect(toggleBranchCollapsed(folded, parentById, "ws1")).toEqual(["ws2"]);
+  });
+});
+
+describe("branchTaskIds", () => {
+  const parentById = new Map<string, string | null>([
+    ["program", null],
+    ["ws1", "program"],
+    ["core", "ws1"],
+    ["bc", "core"],
+    ["live", "ws1"],
+    ["ws2", "program"],
+    ["design", "ws2"],
+  ]);
+
+  it("keeps the branch and the parents above it", () => {
+    expect([...branchTaskIds(parentById, "ws1")].sort()).toEqual([
+      "bc",
+      "core",
+      "live",
+      "program",
+      "ws1",
+    ]);
+  });
+
+  it("keeps a leaf and its chain of parents", () => {
+    expect([...branchTaskIds(parentById, "bc")].sort()).toEqual([
+      "bc",
+      "core",
+      "program",
+      "ws1",
+    ]);
+  });
+
+  it("stops on a loop", () => {
+    const loop = new Map<string, string | null>([
+      ["a", "b"],
+      ["b", "a"],
+    ]);
+    expect([...branchTaskIds(loop, "a")].sort()).toEqual(["a", "b"]);
   });
 });

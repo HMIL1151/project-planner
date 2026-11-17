@@ -3354,6 +3354,20 @@ If your plugin does not need CSS, delete this file.
   flex: 0 0 auto;
 }
 
+/* Calmer than the linking bar: a view the user chose, not a pending action */
+.project-planner-gantt-focus {
+  color: var(--text-normal);
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.project-planner-gantt-focus__text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .project-planner-gantt-linking__cancel {
   padding: 2px 8px;
   font-size: 11px;
@@ -3894,6 +3908,52 @@ If your plugin does not need CSS, delete this file.
   border-radius: 2px;
   background: var(--text-muted);
   cursor: default;
+}
+
+/* Compact density. Rows shrink through --gantt-row-height; these trim what
+   is sized in pixels so it still fits a 22px row. */
+.project-planner-gantt--compact .project-planner-gantt-bar {
+  top: 3px;
+  height: calc(var(--gantt-row-height) - 6px);
+  font-size: 10px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-bar--summary {
+  top: calc(var(--gantt-row-height) / 2 - 5px);
+  height: 4px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-bar--summary::before,
+.project-planner-gantt--compact .project-planner-gantt-bar--summary::after {
+  border-top-width: 4px;
+  border-left-width: 3px;
+  border-right-width: 3px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-rollup {
+  top: calc(var(--gantt-row-height) / 2 + 1px);
+  height: 5px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt-rollup__item--point {
+  width: 5px;
+  margin-left: calc(var(--gantt-day-width) / 2 - 2.5px);
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label-text {
+  font-size: 12px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label .project-planner-tag {
+  margin-bottom: 0;
+  padding: 0 6px;
+  font-size: 10px;
+  line-height: 16px;
+}
+
+.project-planner-gantt--compact .project-planner-gantt__label .project-planner-link-button {
+  height: 18px;
+  padding: 0 4px;
 }
 
 /* The inside of a collapsed row, in the strip under its summary rail */

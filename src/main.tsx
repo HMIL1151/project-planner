@@ -477,6 +477,12 @@ export default class ProjectPlannerPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  /** Persists the Gantt's row density. */
+  async setGanttCompactRows(compact: boolean): Promise<void> {
+    this.settings.ganttCompactRows = compact;
+    await this.saveSettings();
+  }
+
   /** Persists the Gantt's manual row order. */
   async setGanttTaskOrder(order: string[]): Promise<void> {
     this.settings.ganttTaskOrder = order;

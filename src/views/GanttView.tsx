@@ -60,6 +60,7 @@ import {
   resolveParentIds,
   toggleCollapsed,
   toggleBranchCollapsed,
+  branchTaskIds,
   collapsedIdsForLevel,
   hierarchyDepth,
 } from "src/lib/task-hierarchy";
@@ -156,6 +157,8 @@ export default function GanttView({
     new Set()
   );
   const [groupBy, setGroupBy] = useState<GanttGroupBy>("none");
+  // Task whose branch the chart is narrowed to, for this session only
+  const [focusedBranchId, setFocusedBranchId] = useState<string | null>(null);
   // Task a dependency is being drawn from; the next row clicked receives it
   const [linkingFromId, setLinkingFromId] = useState<string | null>(null);
   // Task another view asked us to reveal, cleared once it is on screen
@@ -221,10 +224,27 @@ export default function GanttView({
     };
   }, [app, loadTasks]);
 
+  // A focus on a task that has since gone away quietly lapses
+  const focusedBranchTask = focusedBranchId
+    ? (tasks.find((task) => task.id === focusedBranchId) ?? null)
+    : null;
+
+  const branchIds = useMemo(
+    () =>
+      focusedBranchTask
+        ? branchTaskIds(
+            new Map(tasks.map((task) => [task.id, task.parentId])),
+            focusedBranchTask.id
+          )
+        : null,
+    [focusedBranchTask, tasks]
+  );
+
   const visibleTasks = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
     return tasks.filter((task) => {
+      if (branchIds && !branchIds.has(task.id)) return false;
       if (
         hideCompleted &&
         (task.status === "done" || task.status === "canceled")
@@ -237,7 +257,7 @@ export default function GanttView({
         task.tags.some((tag) => tag.toLowerCase().includes(query))
       );
     });
-  }, [tasks, searchQuery, hideCompleted]);
+  }, [tasks, searchQuery, hideCompleted, branchIds]);
 
   const scheduledRows = useMemo(
     () =>
@@ -1643,6 +1663,10 @@ export default function GanttView({
         onHideCompletedChange={setHideCompleted}
         skipWeekends={settings.ganttSkipWeekends}
         onSkipWeekendsChange={(skip) => void plugin.setGanttSkipWeekends(skip)}
+        compactRows={settings.ganttCompactRows}
+        onCompactRowsChange={(compact) =>
+          void plugin.setGanttCompactRows(compact)
+        }
         showCriticalPath={settings.showCriticalPath}
         onShowCriticalPathChange={(show) =>
           void plugin.setShowCriticalPath(show)
@@ -1660,6 +1684,22 @@ export default function GanttView({
         canUndoOrder={canUndo}
         undoLabel={undoLabel}
       />
+
+      {focusedBranchTask && (
+        <div className="project-planner-gantt-linking project-planner-gantt-focus">
+          <span className="project-planner-gantt-focus__text">
+            {t("gantt.focus_hint", {
+              task: plainTaskText(focusedBranchTask.summary),
+            })}
+          </span>
+          <button
+            className="project-planner-gantt-linking__cancel"
+            onClick={() => setFocusedBranchId(null)}
+          >
+            {t("gantt.focus_clear")}
+          </button>
+        </div>
+      )}
 
       {linkingFromId && (
         <div className="project-planner-gantt-linking">
@@ -1694,6 +1734,7 @@ export default function GanttView({
           timelineEnd={timeline.end}
           today={today}
           dayWidth={dayWidth}
+          compact={settings.ganttCompactRows}
           app={app}
           palette={settings.tagColorPalette}
           colorOverrides={settings.tagColorOverrides}
@@ -1720,6 +1761,7 @@ export default function GanttView({
           onStartLink={handleStartLink}
           onShowInMap={(taskId) => void plugin.focusTaskInMap(taskId)}
           onToggleCollapse={handleToggleCollapse}
+          onFocusBranch={setFocusedBranchId}
           onSetParent={(taskId) => void handleSetParent(taskId)}
           onEditFinance={
             settings.financeEnabled

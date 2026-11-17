@@ -43,6 +43,8 @@ export interface ProjectPlannerSettings {
   ganttLabelWidth: number;
   // How much of the timeline the Gantt tab shows across its width
   ganttScale: GanttScaleId;
+  // Draw Gantt rows slimmer, so more of a long plan fits on screen
+  ganttCompactRows: boolean;
   // Manual Gantt row order, as task IDs
   ganttTaskOrder: string[];
   // Gantt parents whose children are folded away, as task IDs
@@ -111,6 +113,7 @@ export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
 
   ganttLabelWidth: 260,
   ganttScale: DEFAULT_GANTT_SCALE,
+  ganttCompactRows: false,
   ganttTaskOrder: [],
   ganttCollapsedTaskIds: [],
   ganttDateOrder: false,
