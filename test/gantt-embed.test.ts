@@ -39,6 +39,18 @@ describe("parseGanttEmbed", () => {
     }
   });
 
+  it("reads a scale, and ignores one it does not know", () => {
+    const ok = parseGanttEmbed(JSON.stringify({ config: { scale: "6m" } }));
+    if (ok.kind !== "ok") throw new Error("expected ok");
+    expect(ok.config.scale).toBe("6m");
+
+    const bad = parseGanttEmbed(
+      JSON.stringify({ config: { scale: "decade" } })
+    );
+    if (bad.kind !== "ok") throw new Error("expected ok");
+    expect(bad.config).toEqual(DEFAULT_GANTT_EMBED_CONFIG);
+  });
+
   it("rejects a body that is not a JSON object", () => {
     expect(parseGanttEmbed("{ folders: [A] }").kind).toBe("invalid");
     expect(parseGanttEmbed("[]").kind).toBe("invalid");

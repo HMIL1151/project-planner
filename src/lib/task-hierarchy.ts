@@ -40,6 +40,13 @@ export interface HierarchyLine {
   hasChildren: boolean;
   /** True when this row's subtree is hidden. Only ever set on a parent. */
   collapsed: boolean;
+  /**
+   * The tasks a collapsed row hides that do the work: its descendants with no
+   * children of their own, in tree order. The chart draws them faintly in the
+   * folded row, so folding a stream away does not hide where its work falls.
+   * Absent on a row that is not collapsed.
+   */
+  rollup?: GanttRow[];
 }
 
 export interface HierarchyResult {
@@ -264,8 +271,18 @@ export function flattenHierarchy(
     const hasChildren = node.children.length > 0;
     const collapsed = hasChildren && collapsedIds.has(node.row.task.id);
 
+    if (collapsed) {
+      lines.push({
+        row: node.row,
+        depth,
+        hasChildren,
+        collapsed,
+        rollup: leafRows(node),
+      });
+      continue;
+    }
+
     lines.push({ row: node.row, depth, hasChildren, collapsed });
-    if (collapsed) continue;
 
     for (let i = node.children.length - 1; i >= 0; i--) {
       stack.push({ node: node.children[i], depth: depth + 1 });
@@ -273,6 +290,26 @@ export function flattenHierarchy(
   }
 
   return lines;
+}
+
+/** Every descendant of `node` with no children of its own, in tree order. */
+function leafRows(node: HierarchyNode): GanttRow[] {
+  const leaves: GanttRow[] = [];
+  const stack = [...node.children].reverse();
+
+  while (stack.length > 0) {
+    const next = stack.pop();
+    if (!next) break;
+    if (next.children.length === 0) {
+      leaves.push(next.row);
+      continue;
+    }
+    for (let i = next.children.length - 1; i >= 0; i--) {
+      stack.push(next.children[i]);
+    }
+  }
+
+  return leaves;
 }
 
 /** The lines to draw for one set of rows, and the structure they came out of. */
@@ -376,4 +413,61 @@ export function toggleCollapsed(
   return collapsedIds.includes(taskId)
     ? collapsedIds.filter((id) => id !== taskId)
     : [...collapsedIds, taskId];
+}
+
+/**
+ * The collapsed set that shows the chart `level` deep: level 1 is the
+ * top-level tasks alone, level 2 adds their children, and so on. `Infinity`
+ * opens everything.
+ *
+ * Every parent below the cut is folded too, not only the ones on it, so that
+ * opening one of those afterwards shows a single level rather than its whole
+ * subtree at once. Collapsed IDs for tasks not on this chart — another
+ * project's, or ones filtered away — are left as they were.
+ */
+export function collapsedIdsForLevel(
+  collapsedIds: readonly string[],
+  parentById: ReadonlyMap<string, string | null>,
+  level: number
+): string[] {
+  const depths = depthsFrom(parentById);
+  const kept = collapsedIds.filter((id) => !parentById.has(id));
+  const folded = [...parentTaskIds(parentById)].filter(
+    (id) => (depths.get(id) ?? 0) >= level - 1
+  );
+
+  return [...kept, ...folded];
+}
+
+/** How many levels deep the tree goes: 1 when no task has children. */
+export function hierarchyDepth(
+  parentById: ReadonlyMap<string, string | null>
+): number {
+  let deepest = 0;
+  for (const depth of depthsFrom(parentById).values()) {
+    deepest = Math.max(deepest, depth);
+  }
+  return deepest + 1;
+}
+
+/**
+ * The collapsed set with a whole branch folded or opened: the task and every
+ * parent beneath it follow the task's own new state. Opening a branch this way
+ * shows all of it, and folding it leaves nothing half-open inside to surprise
+ * the user the next time it is opened one level at a time.
+ */
+export function toggleBranchCollapsed(
+  collapsedIds: readonly string[],
+  parentById: ReadonlyMap<string, string | null>,
+  taskId: string
+): string[] {
+  const parents = parentTaskIds(parentById);
+  const branch = new Set(
+    [taskId, ...collectDescendantIds(parentById, taskId)].filter((id) =>
+      parents.has(id)
+    )
+  );
+  const rest = collapsedIds.filter((id) => !branch.has(id));
+
+  return collapsedIds.includes(taskId) ? rest : [...rest, ...branch];
 }

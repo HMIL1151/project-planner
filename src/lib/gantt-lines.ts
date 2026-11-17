@@ -33,6 +33,8 @@ export type ChartLine =
       depth: number;
       hasChildren: boolean;
       collapsed: boolean;
+      /** What a collapsed row hides, drawn faintly inside it */
+      rollup?: GanttRow[];
     }
   | {
       kind: "milestone";
@@ -112,6 +114,7 @@ function buildTaskLines(
           depth: line.depth,
           hasChildren: line.hasChildren,
           collapsed: line.collapsed,
+          ...(line.rollup ? { rollup: line.rollup } : {}),
         },
       });
     }

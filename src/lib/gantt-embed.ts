@@ -3,12 +3,15 @@ import {
   TaskSourceSpec,
   coerceTaskSource,
 } from "./task-source";
+import { GanttScaleId, isGanttScaleId } from "./gantt-scale";
 
 /** The language tag of a fenced block that draws a Gantt chart in a note. */
 export const GANTT_EMBED_CODE_BLOCK = "project-planner-gantt";
 
 export interface GanttEmbedConfig {
   height: number;
+  /** Absent means the chart follows the Gantt tab's scale */
+  scale?: GanttScaleId;
 }
 
 export const DEFAULT_GANTT_EMBED_CONFIG: GanttEmbedConfig = {
@@ -52,6 +55,7 @@ export function parseGanttEmbed(body: string): GanttEmbedParseResult {
       ? (obj.config as Record<string, unknown>)
       : {};
   const height = rawConfig.height;
+  const scale = rawConfig.scale;
 
   return {
     kind: "ok",
@@ -61,6 +65,7 @@ export function parseGanttEmbed(body: string): GanttEmbedParseResult {
         typeof height === "number" && isFinite(height) && height > 0
           ? height
           : DEFAULT_GANTT_EMBED_CONFIG.height,
+      ...(isGanttScaleId(scale) ? { scale } : {}),
     },
   };
 }

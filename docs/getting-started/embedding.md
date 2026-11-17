@@ -119,9 +119,13 @@ A block tagged `project-planner-gantt` draws the [Gantt chart](gantt.md) inside 
 ```
 ````
 
-| Config field | Type     | Default | Description                     |
-| ------------ | -------- | ------- | ------------------------------- |
-| `height`     | `number` | `500`   | Height of the chart in pixels   |
+| Config field | Type     | Default            | Description                                                                                               |
+| ------------ | -------- | ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `height`     | `number` | `500`              | Height of the chart in pixels                                                                             |
+| `scale`      | `string` | the Gantt tab's    | `days`, `weeks`, `months`, `2m`, `3m`, `4m`, `6m`, `12m`, `18m` or `fit` — see [Scale](gantt.md#scale) |
+
+A chart with its own `scale` keeps scale changes to itself. Without one, it
+opens at the Gantt tab's scale, and changing it there changes the tab's too.
 
 The chart works the same as the Gantt tab: bars can be dragged, tasks added and linked. The **Open in a tab** button beside it opens the chart in a full tab with the same tasks, named after the note. The tab keeps its project when Obsidian restarts.
 

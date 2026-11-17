@@ -62,6 +62,7 @@ import { UndoHistory } from "./lib/undo-history";
 import { ensureRateNote } from "./lib/rate-book-note";
 import { EdgeStyleOverrides } from "./lib/edge-style-manager";
 import { GanttMilestone } from "./lib/gantt-milestones";
+import { GanttScaleId } from "./lib/gantt-scale";
 import { KanbanGroupBy } from "./lib/kanban-buckets";
 
 const EMBED_CODE_BLOCK = "project-planner";
@@ -467,6 +468,12 @@ export default class ProjectPlannerPlugin extends Plugin {
   /** Persists the Gantt task-column width after a resize drag. */
   async setGanttLabelWidth(width: number): Promise<void> {
     this.settings.ganttLabelWidth = width;
+    await this.saveSettings();
+  }
+
+  /** Persists the Gantt tab's timeline scale. */
+  async setGanttScale(scale: GanttScaleId): Promise<void> {
+    this.settings.ganttScale = scale;
     await this.saveSettings();
   }
 

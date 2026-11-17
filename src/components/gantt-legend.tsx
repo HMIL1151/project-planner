@@ -30,6 +30,10 @@ export function GanttLegend({ showCriticalPath }: GanttLegendProps) {
         {t("gantt.legend_summary")}
       </span>
       <span className="project-planner-gantt-legend__item">
+        <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--rollup" />
+        {t("gantt.legend_rollup")}
+      </span>
+      <span className="project-planner-gantt-legend__item">
         <span className="project-planner-gantt-legend__swatch project-planner-gantt-legend__swatch--today" />
         {t("gantt.legend_today")}
       </span>

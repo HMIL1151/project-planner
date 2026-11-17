@@ -5,10 +5,13 @@ import {
   buildHierarchy,
   buildHierarchyTree,
   childrenByParent,
+  collapsedIdsForLevel,
   collectDescendantIds,
   flattenHierarchy,
+  hierarchyDepth,
   parentTaskIds,
   resolveParentIds,
+  toggleBranchCollapsed,
   toggleCollapsed,
 } from "../src/lib/task-hierarchy";
 
@@ -523,5 +526,82 @@ describe("edge cases", () => {
 
     expect(lines).toHaveLength(500);
     expect(lines[499].depth).toBe(499);
+  });
+});
+
+describe("folding a stream away", () => {
+  // program > ws1 > (core > [bc, ent], live), ws2 > [design]
+  const rows = [
+    makeTask("program"),
+    makeTask("ws1", { parentId: "program" }),
+    makeTask("core", { parentId: "ws1" }),
+    makeTask("bc", {
+      parentId: "core",
+      start: "2027-01-11",
+      end: "2027-05-21",
+    }),
+    makeTask("ent", {
+      parentId: "core",
+      start: "2027-01-18",
+      end: "2027-05-21",
+    }),
+    makeTask("live", { parentId: "ws1", start: "2027-09-13" }),
+    makeTask("ws2", { parentId: "program" }),
+    makeTask("design", { parentId: "ws2", start: "2027-04-05" }),
+  ];
+  const { roots, parentById } = buildHierarchyTree(rows);
+
+  it("carries the leaves a collapsed row hides, in tree order", () => {
+    const lines = flattenHierarchy(roots, new Set(["ws1"]));
+    const ws1 = lines.find((line) => line.row.task.id === "ws1");
+
+    expect(ws1?.rollup?.map((row) => row.task.id)).toEqual([
+      "bc",
+      "ent",
+      "live",
+    ]);
+    expect(
+      lines.find((line) => line.row.task.id === "ws2")?.rollup
+    ).toBeUndefined();
+  });
+
+  it("measures how deep the tree goes", () => {
+    expect(hierarchyDepth(parentById)).toBe(4);
+    expect(hierarchyDepth(new Map([["solo", null]]))).toBe(1);
+  });
+
+  it("folds every parent from the chosen level down", () => {
+    expect(collapsedIdsForLevel([], parentById, 1).sort()).toEqual([
+      "core",
+      "program",
+      "ws1",
+      "ws2",
+    ]);
+    expect(collapsedIdsForLevel([], parentById, 2).sort()).toEqual([
+      "core",
+      "ws1",
+      "ws2",
+    ]);
+    expect(collapsedIdsForLevel([], parentById, 3)).toEqual(["core"]);
+  });
+
+  it("opens everything at an infinite level", () => {
+    expect(collapsedIdsForLevel(["ws1", "core"], parentById, Infinity)).toEqual(
+      []
+    );
+  });
+
+  it("leaves the folds of tasks on other charts alone", () => {
+    expect(collapsedIdsForLevel(["elsewhere"], parentById, 3)).toEqual([
+      "elsewhere",
+      "core",
+    ]);
+  });
+
+  it("folds a whole branch, and opens it whole", () => {
+    const folded = toggleBranchCollapsed(["ws2"], parentById, "ws1");
+    expect(folded.sort()).toEqual(["core", "ws1", "ws2"]);
+
+    expect(toggleBranchCollapsed(folded, parentById, "ws1")).toEqual(["ws2"]);
   });
 });

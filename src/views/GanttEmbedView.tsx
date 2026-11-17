@@ -19,7 +19,7 @@ interface GanttEmbedViewProps {
  * A Gantt chart drawn inside a note, over only the tasks its block names.
  *
  * The chart is the same one the Gantt tab draws; the block only decides which
- * tasks it sees and how tall it is. A note has little room, so the chart can
+ * tasks it sees, how tall it is and, optionally, its scale. A note has little room, so the chart can
  * be lifted out into a tab of its own that keeps the same tasks.
  */
 export default function GanttEmbedView({
@@ -50,7 +50,12 @@ export default function GanttEmbedView({
     <AppContext.Provider value={plugin.app}>
       <div className="project-planner-embed-container" ref={containerRef}>
         <div className="project-planner-embed-inner">
-          <GanttView settings={settings} plugin={plugin} source={source} />
+          <GanttView
+            settings={settings}
+            plugin={plugin}
+            source={source}
+            initialScale={config.scale}
+          />
         </div>
         <EmbedSidebar
           onOpenInTab={() => void plugin.openGanttForSource(source, title)}
