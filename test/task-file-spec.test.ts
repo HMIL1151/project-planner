@@ -17,6 +17,7 @@ import { RawTask } from "../src/types/task";
 import { getTaskProgress } from "../src/lib/task-progress";
 import { parseRateBook } from "../src/lib/rate-book";
 import { scanOpenQuestions } from "../src/lib/open-question";
+import { gateTasksByTag, parseTaskTags } from "../src/lib/task-tag-gate";
 
 const factory = new TaskFactory();
 
@@ -198,5 +199,61 @@ describe("TASK-FILE-SPEC claims", () => {
     expect(questions).toHaveLength(1);
     expect(questions[0].question).toBe("When does week 1 begin?");
     expect(questions[0].answer).toBe("5 January 2027.");
+  });
+});
+
+/**
+ * The page tells the agent to put the same project tag on every task, because
+ * a vault with required task tags set drops any line that carries none. These
+ * pin the gate rules the page states, so neither drifts from the other.
+ */
+describe("TASK-FILE-SPEC claims about the task tag gate", () => {
+  const line = (text: string): RawTask => ({
+    status: " ",
+    text,
+    link: { path: "plan.md" },
+  });
+
+  it("lets every line through when no tags are required", () => {
+    const tasks = [line("Untagged task"), line("Tagged #northgate")];
+    expect(gateTasksByTag(tasks, [])).toHaveLength(2);
+  });
+
+  it("needs only one of the required tags, not all of them", () => {
+    const tasks = [
+      line("Has one #northgate"),
+      line("Has the other #client"),
+      line("Has both #northgate #client"),
+      line("Has neither #admin"),
+    ];
+    const kept = gateTasksByTag(tasks, ["northgate", "client"]);
+    expect(kept.map((task) => task.text)).toEqual([
+      "Has one #northgate",
+      "Has the other #client",
+      "Has both #northgate #client",
+    ]);
+  });
+
+  it("ignores case and a leading hash on the requirement", () => {
+    const tasks = [line("Task #NorthGate")];
+    expect(gateTasksByTag(tasks, ["#northgate"])).toHaveLength(1);
+  });
+
+  it("treats a nested tag as satisfying its parent", () => {
+    const tasks = [line("Task #project/alpha")];
+    expect(gateTasksByTag(tasks, ["project"])).toHaveLength(1);
+    // but not the other way round
+    expect(gateTasksByTag([line("Task #project")], ["project/alpha"])).toEqual(
+      []
+    );
+  });
+
+  it("drops an untagged task when a tag is required", () => {
+    expect(gateTasksByTag([line("No tag at all")], ["northgate"])).toEqual([]);
+  });
+
+  it("accepts the tag list written with commas, spaces or hashes", () => {
+    expect(parseTaskTags("#task, #project")).toEqual(["task", "project"]);
+    expect(parseTaskTags("task project")).toEqual(["task", "project"]);
   });
 });

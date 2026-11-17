@@ -56,17 +56,34 @@ you did, no second file unless this page says so.
 
 ## The rule that breaks everything if you get it wrong
 
-**Every checkbox line anywhere in the vault becomes a task node.** The plugin
-collects every task on every page. There is no tag filter, no folder scope and
-no query to opt in.
+**By default, every checkbox line anywhere in the vault becomes a task node.**
+Out of the box the plugin collects every task on every page, with no folder
+scope and no tag filter.
 
-So:
+Two settings can narrow that, and you will not know whether they are set:
+
+- **Task source** is a Dataview source picking which *notes* are read. Empty by
+  default, meaning the whole vault.
+- **Required task tags** pick which *lines* in those notes count. Empty by
+  default, meaning every `- [ ]` line counts. When set, a line needs at least
+  one of the tags, not all of them. Matching ignores case, and a nested tag
+  satisfies its parent, so `#project/alpha` meets a requirement of `project`.
+
+Write the file so it is correct either way:
 
 - Never use a checkbox for anything that is not a task. No `- [ ]` acceptance
-  criteria, no `- [ ]` assumptions list, no `- [ ]` "things to confirm".
+  criteria, no `- [ ]` assumptions list, no `- [ ]` "things to confirm". With
+  the gate off, every one of those becomes a node.
 - Use `-` bullets without brackets for lists that are not tasks.
 - Put questions in an `[oq:: ...]` field, covered under
   [Open questions](#open-questions-use-these), not a checkbox.
+- **Give every task the same project tag**, as the worked example does with
+  `#northgate`. It costs nothing with the gate off, it is what makes the file
+  work with the gate on, and it is what the user filters the views by.
+
+If the brief names the tag the vault requires, use that one. If it does not,
+use a project tag of your own and raise an `[oq:: ...]` asking whether the
+vault has required task tags set.
 
 If the brief contains a list of deliverables that are not units of work, write
 them as plain bullets under the task they belong to.
@@ -118,7 +135,7 @@ the file stops matching itself the first time someone edits a task in the app.
 | Due date | `📅 2027-01-16` | `YYYY-MM-DD`. |
 | Scheduled | `⏳ 2027-01-12` | `YYYY-MM-DD`. |
 | Done date | `✅ 2027-01-16` | `YYYY-MM-DD`. |
-| Tag | `#northgate` | Preceded by a space. Drives colour and filtering. |
+| Tag | `#northgate` | Preceded by a space. Drives colour and filtering, and may be what makes the line count as a task at all. |
 | Priority | `🔺 ⏫ 🔼 🔽 ⏬` | Highest to lowest. One per task, or none. |
 | Star | `⭐` | Flags a task as notable. Use sparingly. |
 | Open question | `[oq:: Is the date fixed?]` | On its own line, never on a task line. |
@@ -494,6 +511,8 @@ setting at this file.
 - Person names are consistent across every task and match the rates tables.
 - No emoji in descriptions beyond dates, priority and star.
 - No checkbox used for anything that is not a task.
+- Every task carries the project tag, so the file still works if the vault has
+  required task tags set.
 - Every real gap in the brief is an `[oq:: ...]` on its own line.
 - Contingency, fee and overhead called out in prose, not hidden in tasks.
 - One file, no commentary around it.
