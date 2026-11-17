@@ -164,7 +164,7 @@ export function promptForGanttExport(
 /** Loads an image element and waits for it, since drawing needs it decoded. */
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const image = activeDocument.createElement("img");
+    const image = createEl("img");
     image.onload = () => resolve(image);
     image.onerror = () => reject(new Error("the chart image could not load"));
     image.src = src;
@@ -190,7 +190,7 @@ async function rasterize(
 
   try {
     const element = await loadImage(url);
-    const canvas = activeDocument.createElement("canvas");
+    const canvas = createEl("canvas");
     canvas.width = Math.round(image.width * pixelRatio);
     canvas.height = Math.round(image.height * pixelRatio);
 
