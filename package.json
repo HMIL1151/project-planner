@@ -1,6 +1,6 @@
 {
     "name": "project-planner",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "description": "Plan projects from your Markdown tasks with a dependency graph, Gantt chart with critical path, kanban board, and cost tracking.",
     "main": "main.js",
     "engines": {
