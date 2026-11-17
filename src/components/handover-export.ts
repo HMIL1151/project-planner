@@ -210,6 +210,11 @@ async function inlineNoteHtml(
 
     if (target.extension.toLowerCase() === "md") {
       const anchor = anchorByPath.get(target.path);
+      // `ownerDocument.createElement`, not Obsidian's `createEl`, because this
+      // node is about to replace `embed` inside the document that owns it.
+      // `createEl` builds in the main document and would leave the insertion
+      // relying on implicit adoption. Same reasoning as the createTextNode
+      // calls either side of this.
       const link = embed.ownerDocument.createElement("a");
       link.textContent = target.basename;
 
@@ -226,6 +231,7 @@ async function inlineNoteHtml(
       continue;
     }
 
+    // Same document-ownership reasoning as the anchor above.
     const image = embed.ownerDocument.createElement("img");
     image.setAttribute("src", uri);
     image.setAttribute("alt", target.basename);

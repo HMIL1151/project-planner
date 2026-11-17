@@ -28,7 +28,16 @@ export default defineConfig([
             globals: {
                 ...globals.serviceworker,
                 ...globals.browser,
-                activeDocument: "readonly", // Obsidian global (active document context)
+                // Obsidian's ambient globals. The `create*` helpers are what
+                // obsidianmd/prefer-create-el points you at, so they have to be
+                // declared here or using them is a no-undef error.
+                activeDocument: "readonly",
+                activeWindow: "readonly",
+                createEl: "readonly",
+                createDiv: "readonly",
+                createSpan: "readonly",
+                createFragment: "readonly",
+                createSvg: "readonly",
             },
         },
         rules: {

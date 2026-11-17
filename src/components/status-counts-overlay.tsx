@@ -12,7 +12,7 @@ const statusLabelKeys: Record<TaskStatus, string> = {
 const ALL_STATUSES: TaskStatus[] = ["todo", "in_progress", "done", "canceled"];
 
 function getContrastColor(bgColor: string): string {
-  const canvas = activeDocument.createElement("canvas");
+  const canvas = createEl("canvas");
   canvas.width = 1;
   canvas.height = 1;
   const ctx = canvas.getContext("2d");
