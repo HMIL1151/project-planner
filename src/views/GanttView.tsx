@@ -162,12 +162,18 @@ export default function GanttView({
     (options: { notify?: boolean } = {}) => {
       setIsLoading(true);
       window.setTimeout(() => {
-        setTasks(getAllTasks(app, combineSources(settings.taskSource, source)));
+        setTasks(
+          getAllTasks(
+            app,
+            combineSources(settings.taskSource, source),
+            settings.taskTags
+          )
+        );
         setIsLoading(false);
         if (options.notify) new Notice(t("gantt.reloaded"));
       }, 0);
     },
-    [app, settings.taskSource, source]
+    [app, settings.taskSource, settings.taskTags, source]
   );
 
   useEffect(() => {

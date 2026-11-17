@@ -36,6 +36,7 @@ import {
 } from "./connection-highlight";
 import { NODEHEIGHT, NODEWIDTH } from "src/components/task-node";
 import { TaskFactory } from "./task-factory";
+import { gateTasksByTag } from "./task-tag-gate";
 import { Position, Node, Edge } from "reactflow";
 import { t } from "../i18n";
 import { TagColorPalette, TagColorOverrides } from "./tag-color-manager";
@@ -1435,7 +1436,11 @@ export async function removeSignFromTaskInFile(
  * cannot read comes back as no tasks at all, with a notice saying why, rather
  * than quietly falling back to the whole vault.
  */
-export function getAllTasks(app: App, source = ""): BaseTask[] {
+export function getAllTasks(
+  app: App,
+  source = "",
+  requiredTags: string[] = []
+): BaseTask[] {
   const pages = readDataviewPages(app, source);
   if (!pages) return [];
 
@@ -1454,7 +1459,7 @@ export function getAllTasks(app: App, source = ""): BaseTask[] {
 
   return [
     // Source 1: Dataview plugin tasks
-    ...getAllDataviewTasks(app, pages),
+    ...getAllDataviewTasks(app, pages, requiredTags),
     // Source 2: Note-based tasks (notes with #task in frontmatter)
     ...getNoteTasks(app, paths),
   ];
@@ -1485,13 +1490,24 @@ function readDataviewPages(app: App, source: string): DataviewPage[] | null {
   }
 }
 
-function getAllDataviewTasks(app: App, pages: DataviewPage[]): BaseTask[] {
+function getAllDataviewTasks(
+  app: App,
+  pages: DataviewPage[],
+  requiredTags: string[] = []
+): BaseTask[] {
   let tasks: RawTask[] = [];
   for (const page of pages) {
     if (page.file && page.file.tasks && page.file.tasks.values) {
       tasks = tasks.concat(page.file.tasks.values);
     }
   }
+
+  // Gate before parsing, not after. On a vault where real tasks share notes
+  // with shopping lists and meeting checklists, the cost being complained
+  // about is parsing thousands of irrelevant lines, so a filter applied later
+  // would not fix it.
+  tasks = gateTasksByTag(tasks, requiredTags);
+
   const factory = new TaskFactory();
   const parsedTasks = tasks.map((rawTask) => factory.parse(rawTask));
 

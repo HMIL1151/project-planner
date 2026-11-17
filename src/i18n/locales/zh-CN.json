@@ -454,7 +454,10 @@
     "finance_include_inferred_desc": "统计 Gantt 日期为系统建议而非已写入的任务",
     "task_source": "任务来源",
     "task_source_desc": "所有视图读取任务的库范围，使用 Dataview FROM 来源语法。留空表示整个库。",
-    "task_source_placeholder": "-\"Archive\""
+    "task_source_placeholder": "-\"Archive\"",
+    "task_tags": "必需的任务标签",
+    "task_tags_desc": "仅当复选框行带有其中一个标签时才视为任务。使用逗号或空格分隔；开头的 # 可省略。留空表示统计所有复选框，这是默认设置。父标签会匹配其子标签，因此 project 也匹配 #project/alpha。任务来源决定读取哪些笔记，此设置决定其中哪些行计为任务。",
+    "task_tags_placeholder": "#task, #project"
   },
   "filters": {
     "status": "状态",

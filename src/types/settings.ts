@@ -17,6 +17,11 @@ export interface ProjectPlannerSettings {
   // Dataview source every view reads its tasks from; empty means the vault
   taskSource: string;
 
+  // Tags a checkbox line must carry to count as a task; empty means every
+  // `- [ ]` line counts, which is what every vault did before this existed.
+  // The source picks the notes, this picks the lines within them.
+  taskTags: string[];
+
   showPriorities: boolean;
   showTags: boolean;
   showStatusCounts: boolean;
@@ -84,6 +89,7 @@ export interface ProjectPlannerSettings {
 
 export const DEFAULT_SETTINGS: ProjectPlannerSettings = {
   taskSource: "",
+  taskTags: [],
 
   showPriorities: true,
   showTags: true,

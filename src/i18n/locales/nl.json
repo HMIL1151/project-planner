@@ -454,7 +454,10 @@
     "finance_include_inferred_desc": "Tel taken mee waarvan de Gantt-datums zijn voorgesteld in plaats van vastgelegd",
     "task_source": "Taakbron",
     "task_source_desc": "Uit welk deel van de kluis elke weergave taken leest, geschreven als Dataview FROM-bron. Leeg laten voor de hele kluis.",
-    "task_source_placeholder": "-\"Archive\""
+    "task_source_placeholder": "-\"Archive\"",
+    "task_tags": "Vereiste taaktags",
+    "task_tags_desc": "Beschouw een regel met een selectievakje alleen als taak wanneer deze een van deze tags heeft. Scheid ze met komma’s of spaties; de # vooraf is optioneel. Laat leeg om elk selectievakje mee te tellen, dat is de standaard. Een hoofdtag omvat zijn subtags, dus project omvat ook #project/alpha. De taakbron bepaalt welke notities worden gelezen; dit bepaalt welke regels daarin meetellen.",
+    "task_tags_placeholder": "#task, #project"
   },
   "filters": {
     "status": "Status",

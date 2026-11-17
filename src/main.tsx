@@ -376,7 +376,15 @@ export default class ProjectPlannerPlugin extends Plugin {
    * asks first.
    */
   async createNotesForExistingTasks(): Promise<void> {
-    const tasks = getAllTasks(this.app);
+    // Honour both filters. This rewrites task lines in place, so it must not
+    // touch a line the user has excluded from the plugin's view of the vault:
+    // a retrofit reaching into an archived folder, or into a shopping list the
+    // tag gate deliberately ignores, would be a surprise it cannot undo.
+    const tasks = getAllTasks(
+      this.app,
+      this.settings.taskSource,
+      this.settings.taskTags
+    );
     const needNotes = findTasksNeedingNotes(tasks);
     const alreadyLinked = tasks.filter(
       (task) => task.type === "dataview" && !needNotes.includes(task)

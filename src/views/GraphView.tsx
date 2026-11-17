@@ -222,7 +222,8 @@ export default function GraphView({
       droppedNodePositions.current = new Map();
       const newTasks = getAllTasks(
         app,
-        combineSources(settings.taskSource, source)
+        combineSources(settings.taskSource, source),
+        settings.taskTags
       );
       setTasks(newTasks);
       const newRegistry = new Map<string, string[]>();
@@ -233,7 +234,7 @@ export default function GraphView({
       setIsLoading(false);
       new Notice("Tasks reloaded");
     }, 0);
-  }, [app, settings.taskSource, source]);
+  }, [app, settings.taskSource, settings.taskTags, source]);
 
   useEffect(() => {
     if (reloadRef) {

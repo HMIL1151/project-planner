@@ -454,7 +454,10 @@
     "finance_include_inferred_desc": "Count tasks whose Gantt dates were suggested rather than written",
     "task_source": "Task source",
     "task_source_desc": "Which part of the vault every view reads tasks from, written as a Dataview FROM source. Leave empty for the whole vault.",
-    "task_source_placeholder": "-\"Archive\""
+    "task_source_placeholder": "-\"Archive\"",
+    "task_tags": "Required task tags",
+    "task_tags_desc": "Only count a checkbox line as a task if it carries one of these tags. Separate them with commas or spaces; the leading # is optional. Leave empty to count every checkbox, which is the default. A parent tag matches its children, so project also matches #project/alpha. The task source picks which notes are read; this picks which lines within them count.",
+    "task_tags_placeholder": "#task, #project"
   },
   "filters": {
     "status": "Status",

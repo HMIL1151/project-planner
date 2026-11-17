@@ -27,6 +27,48 @@ The value is a [Dataview source](https://blacksmithgu.github.io/obsidian-datavie
 
 A [Gantt or graph block](embedding.md#choosing-which-tasks-a-block-shows) in a note narrows this further to one project. If Dataview cannot read the source, the views show no tasks and a notice says why.
 
+## Required Task Tags
+
+Which checkbox lines count as tasks. Leave it empty — the default — and every
+`- [ ]` line in the notes being read counts, which is how the plugin has always
+behaved.
+
+Set it, and a line only counts if it carries one of the tags you list:
+
+```markdown
+- [ ] Draft the handover pack #task     <!-- counted -->
+- [ ] Milk, bread, coffee               <!-- ignored -->
+```
+
+Separate several tags with commas or spaces, and the leading `#` is optional —
+`#task, #project` and `task project` both work. A line matching **any** one of
+them counts.
+
+A parent tag matches its children, so `project` also matches `#project/alpha`
+and `#project/beta`. You do not have to list every branch.
+
+### How this differs from Task Source
+
+The two stack, and they answer different questions:
+
+| Setting               | Narrows                | Granularity |
+| --------------------- | ---------------------- | ----------- |
+| **Task source**       | Which notes are read   | Per note    |
+| **Required task tags** | Which lines count      | Per line    |
+
+A Dataview source is page-level, so it cannot help when real tasks and stray
+checkboxes live in the *same* note — a daily note holding both a project task
+and a shopping list, for example. That is what this setting is for.
+
+Because the gate runs before anything is parsed, the lines it excludes cost
+nothing: on a vault with thousands of unrelated checkboxes, this is faster than
+reading them all and hiding them afterwards.
+
+!!! note "Note-based tasks are unaffected"
+
+    A note tagged `task` in its frontmatter is already opted in by that tag, so
+    this setting does not apply to it. Only inline checkbox lines are gated.
+
 ## Display Options
 
 Toggle what information is shown on task nodes in the graph.
