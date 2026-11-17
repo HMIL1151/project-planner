@@ -14,6 +14,7 @@ nav = [
     "getting-started/board.md",
     "getting-started/finance.md",
     "getting-started/embedding.md",
+    "getting-started/agent-task-files.md",
     "getting-started/settings.md",
   ] },
   { "Contributing" = [

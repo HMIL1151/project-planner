@@ -2,7 +2,7 @@
     "id": "project-planner",
     "name": "Project Planner",
     "version": "1.2.0",
-    "minAppVersion": "1.8.0",
+    "minAppVersion": "1.13.0",
     "description": "Plan projects from your Markdown tasks with a dependency graph, Gantt chart with critical path, kanban board, and cost tracking.",
     "author": "Harrison Milburn",
     "authorUrl": "https://github.com/HMIL1151",
