@@ -3178,21 +3178,19 @@ If your plugin does not need CSS, delete this file.
   box-sizing: border-box;
 }
 
-/* `position` anchors the row-action overlay. `background-color` is the opaque
-   backdrop for this one row: the timeline is a sibling of the whole column, so
-   without it a task name is only readable while some ancestor box happens to
-   reach this far down. Every state below tints *over* this colour rather than
-   replacing it — a translucent `background` shorthand would put the bars back
-   behind the text. */
+/* `background-color` is the opaque backdrop for this one row: the timeline is
+   a sibling of the whole column, so without it a task name is only readable
+   while some ancestor box happens to reach this far down. Every state below
+   tints *over* this colour rather than replacing it — a translucent
+   `background` shorthand would put the bars back behind the text. */
 .project-planner-gantt__label {
-  position: relative;
   display: flex;
   align-items: center;
   gap: 6px;
   height: var(--gantt-row-height);
   /* `--gantt-depth` is set per row through a ref: a task nested two deep sits
      two steps in from the column's edge. Only the padding moves, so the row's
-     backdrop, its hover target and the action strip still run the full width. */
+     backdrop and its hover target still run the full width. */
   padding: 0 6px 0 calc(8px + var(--gantt-depth, 0) * 14px);
   box-sizing: border-box;
   cursor: pointer;
@@ -3276,48 +3274,15 @@ If your plugin does not need CSS, delete this file.
   min-width: 0;
 }
 
-/* Floated over the right edge of the row instead of taking a column of its
-   own: the buttons are hidden for all but the hovered row, and a reserved
-   strip would narrow every task name to pay for it. Out of flow, so revealing
-   them cannot shove the name sideways under the pointer.
-
-   The two `inherit`s copy whatever backdrop the row itself ended up with —
-   plain, selected, connected, at risk — so the strip covers the text it sits
-   on without having to restate a colour for every state. */
-.project-planner-gantt__row-actions {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-  padding: 0 6px 0 10px;
-  background-color: inherit;
-  background-image: inherit;
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* `focus-within` is what keeps the buttons usable from the keyboard: they stay
-   in the DOM and in the tab order, and tabbing into one reveals the strip. */
-.project-planner-gantt__label:hover .project-planner-gantt__row-actions,
-.project-planner-gantt__label:focus-within .project-planner-gantt__row-actions {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* Editing a tag turns the row into a text field that runs its full width;
-   the overlay would sit on top of the input's right-hand end. */
-.project-planner-gantt__row-actions--hidden {
-  display: none;
-}
-
-.project-planner-gantt__row-action {
+/* One slot at the end of the row, in normal flow, so a long task name is
+   shortened to make room for it rather than covered by it. The actions behind
+   it open in an Obsidian menu, which is appended to the document and so is not
+   clipped by this column as it scrolls. */
+.project-planner-gantt__row-menu {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
   padding: 2px;
   background: transparent;
   box-shadow: none;
@@ -3325,7 +3290,11 @@ If your plugin does not need CSS, delete this file.
   cursor: pointer;
 }
 
-.project-planner-gantt__row-action:hover {
+/* Faint until the row is under the pointer or holds the keyboard focus, so a
+   full column of these reads as one quiet edge rather than a bank of buttons */
+.project-planner-gantt__label:hover .project-planner-gantt__row-menu,
+.project-planner-gantt__label:focus-within .project-planner-gantt__row-menu,
+.project-planner-gantt__row-menu:hover {
   color: var(--text-normal);
 }
 
@@ -3949,11 +3918,6 @@ If your plugin does not need CSS, delete this file.
   padding: 0 6px;
   font-size: 10px;
   line-height: 16px;
-}
-
-.project-planner-gantt--compact .project-planner-gantt__label .project-planner-link-button {
-  height: 18px;
-  padding: 0 4px;
 }
 
 /* The inside of a collapsed row, in the strip under its summary rail */

@@ -137,6 +137,8 @@
     "add_tag": "添加标签",
     "tag_failed": "无法更新任务标签",
     "show_in_map": "在任务图中显示此任务",
+    "row_actions": "任务操作",
+    "open_note_failed": "无法打开任务笔记",
     "legend_upstream": "前置任务（上游）",
     "legend_downstream": "后续任务（下游）",
     "undone": "已撤销：{{action}}",

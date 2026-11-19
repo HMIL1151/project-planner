@@ -83,10 +83,21 @@ a gap between phases shows as a gap — and each one-day task (a gate, a
 go-live) as a diamond, so it does not vanish at a coarse scale. A task that
 needs attention is drawn in yellow. Hover any of them for its name and dates.
 
+### Row actions
+
+Every task row ends in a **⋮** button holding everything you can do to that
+task: **Open note**, **Show this task on the map**, **Add a tag**, **Link this
+task to another**, **Put this task inside another**, **Add a task after this
+one**, and **Finance…** when costing is switched on. A parent row also offers
+**Show only this branch**.
+
+One button rather than a row of them, so nothing is ever drawn over a task
+name and the row looks the same whether the pointer is on it or not.
+
 ### Showing one branch
 
-The **focus** button on a parent row (it appears on hover) narrows the chart to
-that task, everything inside it and the parents above it. A bar above the chart
+**Show only this branch** in a parent row's menu narrows the chart to that
+task, everything inside it and the parents above it. A bar above the chart
 names the branch; **Show all** brings the rest back. The focus lasts until you
 clear it or close the tab. Levels, search and **Hide completed** all work
 inside it.
@@ -138,7 +149,7 @@ the chart.
 | Drag the left edge         | Changes the start date                          |
 | Drag the right edge        | Changes the due date                            |
 | Click a task name          | Selects the row and lights up its dependency chain |
-| Click the arrow button     | Opens the note the task lives in                |
+| Row menu → **Open note**   | Opens the note the task lives in                |
 
 Dragging snaps to whole days. A bar can never be shorter than one day.
 

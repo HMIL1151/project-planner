@@ -137,6 +137,8 @@
     "add_tag": "Tag toevoegen",
     "tag_failed": "Kon de tags van de taak niet bijwerken",
     "show_in_map": "Toon deze taak op de kaart",
+    "row_actions": "Taakacties",
+    "open_note_failed": "Kon de taaknotitie niet openen",
     "legend_upstream": "Komt ervoor (stroomopwaarts)",
     "legend_downstream": "Wacht erop (stroomafwaarts)",
     "undone": "Ongedaan gemaakt: {{action}}",

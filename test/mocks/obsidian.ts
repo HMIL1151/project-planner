@@ -106,13 +106,60 @@ export class MetadataCache {
   }
 }
 
+/**
+ * A tab, as far as opening a task's note cares.
+ *
+ * A tab Obsidian has not got round to loading has no view to ask which file
+ * it is on; the file is only in its view state until then. `loaded: false`
+ * stands one of those up.
+ */
+export class WorkspaceLeaf {
+  view: { file?: TFile | null };
+  private viewState: { state?: { file?: string } };
+
+  constructor(file: string | null = null, loaded = true) {
+    this.view = loaded && file ? { file: new TFile(file) } : {};
+    this.viewState = file ? { state: { file } } : {};
+  }
+
+  getViewState(): { state?: { file?: string } } {
+    return this.viewState;
+  }
+}
+
+/** Which tabs are open, and a record of what was asked of the workspace. */
+export class Workspace {
+  leaves: WorkspaceLeaf[] = [];
+  revealed: WorkspaceLeaf | null = null;
+  activated: WorkspaceLeaf | null = null;
+  openedLinks: string[] = [];
+
+  getLeavesOfType(type: string): WorkspaceLeaf[] {
+    return type === "markdown" ? this.leaves : [];
+  }
+
+  async revealLeaf(leaf: WorkspaceLeaf): Promise<void> {
+    this.revealed = leaf;
+  }
+
+  setActiveLeaf(leaf: WorkspaceLeaf, _options?: { focus?: boolean }): void {
+    this.activated = leaf;
+  }
+
+  async openLinkText(link: string, _sourcePath: string): Promise<void> {
+    this.openedLinks.push(link);
+  }
+}
+
 export class App {
   vault: Vault;
   metadataCache: MetadataCache;
+  workspace: Workspace;
 
   constructor() {
     this.vault = new Vault();
     this.metadataCache = new MetadataCache(this.vault);
+    this.workspace = new Workspace();
   }
 }
 
