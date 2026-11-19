@@ -5,19 +5,12 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { App } from "obsidian";
+import { App, Notice } from "obsidian";
 import {
   AlertTriangle,
   ChevronDown,
   ChevronRight,
-  Coins,
-  Focus,
   GripVertical,
-  IndentIncrease,
-  Link2,
-  Network,
-  Plus,
-  TagIcon,
 } from "lucide-react";
 import {
   addDays,
@@ -50,6 +43,7 @@ import {
 } from "src/lib/gantt-milestones";
 import { ScheduleRisk } from "src/lib/schedule-risk";
 import { plainTaskText } from "src/lib/task-text";
+import { openTaskLink } from "src/lib/open-task-link";
 import { effectiveTaskStatus } from "src/lib/task-progress";
 import { GanttBar, BarDragResult } from "./gantt-bar";
 import { GanttRollup } from "./gantt-rollup";
@@ -59,7 +53,7 @@ import {
   MilestoneDragResult,
 } from "./gantt-milestone";
 import { TagInput } from "./tag-input";
-import { LinkButton } from "./link-button";
+import { GanttRowMenu, RowMenuItem } from "./gantt-row-menu";
 import { Tag } from "./tag";
 import { TagColorOverrides, TagColorPalette } from "src/lib/tag-color-manager";
 import { t } from "../i18n";
@@ -260,7 +254,6 @@ function RowLabel({
           ))}
         </span>
       )}
-      <LinkButton link={row.task.link} app={app} taskStatus={row.task.status} />
     </>
   );
 }
@@ -424,6 +417,90 @@ export function GanttChart({
       cascadingIds.current = carried;
     },
     [rowById, rows, timelineStart]
+  );
+
+  /**
+   * What a row's menu button offers, in the order it offers it.
+   *
+   * Opening the note comes first: it is what most of these rows exist to lead
+   * to, and it is the button the old hover strip used to cover.
+   */
+  const rowMenuItems = useCallback(
+    (row: GanttRow, hasChildren: boolean): RowMenuItem[] => {
+      const taskId = row.task.id;
+
+      const items: RowMenuItem[] = [
+        {
+          icon: "arrow-up-right",
+          label: t("task_edit.open_note"),
+          onSelect: () => {
+            void openTaskLink(app, row.task.link).catch((error) => {
+              console.error("Could not open the task note", error);
+              new Notice(t("gantt.open_note_failed"));
+            });
+          },
+        },
+      ];
+
+      // Only a parent has a branch to narrow the chart down to
+      if (hasChildren) {
+        items.push({
+          icon: "focus",
+          label: t("gantt.focus_branch"),
+          onSelect: () => onFocusBranch(taskId),
+        });
+      }
+
+      items.push(
+        {
+          icon: "tag",
+          label: t("gantt.add_tag"),
+          onSelect: () =>
+            setTaggingId((previous) => (previous === taskId ? null : taskId)),
+        },
+        {
+          icon: "network",
+          label: t("gantt.show_in_map"),
+          onSelect: () => onShowInMap(taskId),
+        },
+        {
+          icon: "link-2",
+          label: t("gantt.link_from"),
+          onSelect: () => onStartLink(taskId),
+        },
+        {
+          icon: "indent-increase",
+          label: t("gantt.set_parent"),
+          onSelect: () => onSetParent(taskId),
+        }
+      );
+
+      // Costing is only offered when the finance side is switched on
+      if (onEditFinance) {
+        items.push({
+          icon: "coins",
+          label: t("finance.menu_item"),
+          onSelect: () => onEditFinance(taskId),
+        });
+      }
+
+      items.push({
+        icon: "plus",
+        label: t("gantt.add_task_after"),
+        onSelect: () => onAddTaskAfter(taskId),
+      });
+
+      return items;
+    },
+    [
+      app,
+      onAddTaskAfter,
+      onEditFinance,
+      onFocusBranch,
+      onSetParent,
+      onShowInMap,
+      onStartLink,
+    ]
   );
 
   const lines = useMemo(
@@ -976,100 +1053,16 @@ export function GanttChart({
                     onRemoveTag={onRemoveTag}
                   />
                 )}
-                {/* Always rendered, so the buttons stay in the tab order and
-                    in the accessibility tree; CSS floats them over the right
-                    of the row and reveals them on hover or focus. */}
-                <span
-                  className={`project-planner-gantt__row-actions${
-                    taggingId === line.row.task.id
-                      ? " project-planner-gantt__row-actions--hidden"
-                      : ""
-                  }`}
-                >
-                  {line.hasChildren && (
-                    <button
-                      className="project-planner-gantt__row-action"
-                      title={t("gantt.focus_branch")}
-                      aria-label={t("gantt.focus_branch")}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onFocusBranch(line.row.task.id);
-                      }}
-                    >
-                      <Focus size={12} />
-                    </button>
-                  )}
-                  <button
-                    className="project-planner-gantt__row-action"
-                    title={t("gantt.add_tag")}
-                    aria-label={t("gantt.add_tag")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      setTaggingId((previous) =>
-                        previous === line.row.task.id ? null : line.row.task.id
-                      );
-                    }}
-                  >
-                    <TagIcon size={12} />
-                  </button>
-                  <button
-                    className="project-planner-gantt__row-action"
-                    title={t("gantt.show_in_map")}
-                    aria-label={t("gantt.show_in_map")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onShowInMap(line.row.task.id);
-                    }}
-                  >
-                    <Network size={12} />
-                  </button>
-                  <button
-                    className="project-planner-gantt__row-action"
-                    title={t("gantt.link_from")}
-                    aria-label={t("gantt.link_from")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onStartLink(line.row.task.id);
-                    }}
-                  >
-                    <Link2 size={12} />
-                  </button>
-                  <button
-                    className="project-planner-gantt__row-action"
-                    title={t("gantt.set_parent")}
-                    aria-label={t("gantt.set_parent")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onSetParent(line.row.task.id);
-                    }}
-                  >
-                    <IndentIncrease size={12} />
-                  </button>
-                  {onEditFinance && (
-                    <button
-                      className="project-planner-gantt__row-action"
-                      title={t("finance.menu_item")}
-                      aria-label={t("finance.menu_item")}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onEditFinance(line.row.task.id);
-                      }}
-                    >
-                      <Coins size={12} />
-                    </button>
-                  )}
-                  <button
-                    className="project-planner-gantt__row-action"
-                    title={t("gantt.add_task_after")}
-                    aria-label={t("gantt.add_task_after")}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      onAddTaskAfter(line.row.task.id);
-                    }}
-                  >
-                    <Plus size={12} />
-                  </button>
-                </span>
+                {/* One button at the end of the row, in flow and always
+                    visible. The strip of icons that used to float over this
+                    spot covered the open-note button underneath it (#15), so
+                    the actions live in a menu behind this button instead. */}
+                {taggingId !== line.row.task.id && (
+                  <GanttRowMenu
+                    items={rowMenuItems(line.row, line.hasChildren)}
+                    label={t("gantt.row_actions")}
+                  />
+                )}
               </div>
             )
           )}

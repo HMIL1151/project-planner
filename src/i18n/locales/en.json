@@ -137,6 +137,8 @@
     "add_tag": "Add a tag",
     "tag_failed": "Could not update the task tags",
     "show_in_map": "Show this task on the map",
+    "row_actions": "Task actions",
+    "open_note_failed": "Could not open the task note",
     "legend_upstream": "Comes before (upstream)",
     "legend_downstream": "Waits on it (downstream)",
     "undone": "Undone: {{action}}",
